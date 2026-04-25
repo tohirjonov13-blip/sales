@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Точка Роста — CRM</title>
+<style>
+:root {
+  /* Backgrounds */
+  --bg:      #F2F2F7;
+  --surface: #FFFFFF;
+  --fill:    rgba(118,118,128,0.12);
+  --fill2:   rgba(118,118,128,0.07);
+  --sep:     rgba(60,60,67,0.18);
+
+  /* iOS system colors */
+  --blue:    #007AFF;
+  --green:   #34C759;
+  --orange:  #FF9500;
+  --red:     #FF3B30;
+  --purple:  #AF52DE;
+  --indigo:  #5856D6;
+  --yellow:  #FFCC00;
+  --teal:    #5AC8FA;
+
+  /* Soft tints */
+  --blue-s:   rgba(0,122,255,0.10);
+  --green-s:  rgba(52,199,89,0.10);
+  --orange-s: rgba(255,149,0,0.10);
+  --red-s:    rgba(255,59,48,0.10);
+  --purple-s: rgba(175,82,222,0.10);
+  --yellow-s: rgba(255,204,0,0.12);
+
+  /* Labels */
+  --l1: #1C1C1E;
+  --l2: #3C3C43;
+  --l3: #8E8E93;
+  --l4: #C7C7CC;
+
+  /* Radii */
+  --r-sm: 8px;
+  --r:    12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+
+  /* Shadows */
+  --sh-xs: 0 1px 3px rgba(0,0,0,0.06);
+  --sh-sm: 0 2px 10px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --sh:    0 4px 20px rgba(0,0,0,0.09), 0 1px 4px rgba(0,0,0,0.04);
+  --sh-lg: 0 8px 36px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.05);
+
+  /* Font */
+  --font:  -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  --font2: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+
+  /* ── Backward-compat aliases (used in JS inline styles) ── */
+  --border:  rgba(60,60,67,0.12);
+  --accent:  #007AFF;
+  --accent2: #FF3B30;
+  --text:    #1C1C1E;
+  --muted:   #8E8E93;
+  --s1:      #FFFFFF;
+  --s2:      rgba(118,118,128,0.12);
+  --s3:      rgba(118,118,128,0.07);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--l1);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Utils ── */
+.hidden { display: none !important; }
+
+/* ── Screen manager ── */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ═══════════════════════════════════════
+   LOGIN
+═══════════════════════════════════════ */
+#s-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  background: linear-gradient(155deg, #EEF3FF 0%, #F2F2F7 45%, #FFF0F8 100%);
+}
+
+.login-wrap { width: 100%; max-width: 360px; text-align: center; }
+
+.app-icon {
+  width: 88px;
+  height: 88px;
+  border-radius: 24px;
+  background: linear-gradient(145deg, #007AFF 0%, #5856D6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 22px;
+  box-shadow: 0 8px 28px rgba(0,122,255,0.32), 0 2px 8px rgba(0,122,255,0.20),
+              inset 0 1px 0 rgba(255,255,255,0.25);
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -1px;
+}
+
+.login-title {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--l1);
+  letter-spacing: -0.6px;
+  margin-bottom: 6px;
+}
+
+.login-sub {
+  font-size: 15px;
+  color: var(--l3);
+  margin-bottom: 36px;
+}
+
+.login-card {
+  background: var(--surface);
+  border-radius: var(--r-xl);
+  padding: 28px 24px 24px;
+  box-shadow: var(--sh-lg);
+}
+
+/* ── Fields ── */
+.field { margin-bottom: 16px; }
+
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--l3);
+  margin-bottom: 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.field input, .field select, .field textarea {
+  width: 100%;
+  background: var(--fill);
+  border: 1.5px solid transparent;
+  border-radius: var(--r);
+  padding: 13px 16px;
+  color: var(--l1);
+  font-family: var(--font);
+  font-size: 16px;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.field input:focus, .field select:focus, .field textarea:focus {
+  background: var(--surface);
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(0,122,255,0.12);
+}
+
+.field input::placeholder { color: var(--l4); }
+.field select option { background: var(--surface); color: var(--l1); }
+.field textarea { resize: vertical; min-height: 80px; font-size: 15px; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: var(--r);
+  padding: 13px 20px;
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--blue);
+  color: #fff;
+  width: 100%;
+  box-shadow: 0 4px 14px rgba(0,122,255,0.3);
+}
+.btn-primary:hover { background: #0066DD; box-shadow: 0 6px 18px rgba(0,122,255,0.35); }
+
+.btn-sm  { padding: 8px 14px;  font-size: 13px; width: auto; border-radius: 9px; }
+.btn-xs  { padding: 5px 10px;  font-size: 12px; width: auto; border-radius: 7px; }
+
+.btn-ghost { background: var(--fill); color: var(--l1); border: none; }
+.btn-ghost:hover { background: rgba(118,118,128,0.18); }
+
+.btn-danger { background: var(--red-s); color: var(--red); }
+.btn-danger:hover { background: rgba(255,59,48,0.18); }
+
+.btn-green  { background: var(--green);  color: #fff; box-shadow: 0 4px 12px rgba(52,199,89,0.3); }
+.btn-yellow { background: var(--orange); color: #fff; box-shadow: 0 4px 12px rgba(255,149,0,0.3); }
+
+.err {
+  color: var(--red);
+  font-size: 13px;
+  margin-top: 12px;
+  text-align: center;
+  min-height: 18px;
+  font-weight: 500;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════ */
+#s-app { min-height: 100vh; display: flex; flex-direction: column; }
+
+.topbar {
+  background: rgba(248,248,252,0.90);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 0.5px solid var(--sep);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 12px;
+}
+
+.topbar-logo {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--l1);
+  letter-spacing: -0.3px;
+  flex-shrink: 0;
+}
+
+.topbar-nav {
+  display: flex;
+  gap: 2px;
+  background: var(--fill);
+  border-radius: 10px;
+  padding: 3px;
+  flex: 1;
+  max-width: 480px;
+  justify-content: center;
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  color: var(--l3);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.18s;
+  white-space: nowrap;
+  flex: 1;
+  text-align: center;
+}
+
+.nav-btn:hover { color: var(--l1); }
+.nav-btn.active {
+  background: var(--surface);
+  color: var(--blue);
+  font-weight: 600;
+  box-shadow: var(--sh-xs);
+}
+
+.topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.month-sel {
+  background: var(--fill);
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 7px 10px;
+  color: var(--l1);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--fill);
+  border-radius: 100px;
+  padding: 4px 12px 4px 4px;
+}
+
+.user-av {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--indigo));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.user-name { font-size: 13px; font-weight: 500; color: var(--l1); }
+
+.main-content {
+  flex: 1;
+  padding: 28px 20px;
+  max-width: 1320px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Tabs ── */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ── Page header ── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--l1);
+  letter-spacing: -0.6px;
+  line-height: 1.1;
+}
+
+.page-sub { color: var(--l3); font-size: 14px; margin-top: 3px; }
+
+/* ═══════════════════════════════════════
+   GRIDS
+═══════════════════════════════════════ */
+.grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 20px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-bottom: 20px; }
+
+@media(max-width:900px) {
+  .grid-4 { grid-template-columns: repeat(2,1fr); }
+  .grid-3 { grid-template-columns: repeat(2,1fr); }
+}
+@media(max-width:600px) {
+  .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════
+   STAT CARDS
+═══════════════════════════════════════ */
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  box-shadow: var(--sh-sm);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid transparent;
+}
+
+.stat-icon {
+  font-size: 20px;
+  margin-bottom: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--l3);
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  color: var(--l1);
+}
+
+.stat-value.blue   { color: var(--blue); }
+.stat-value.green  { color: var(--green); }
+.stat-value.yellow { color: var(--orange); }
+.stat-value.red    { color: var(--red); }
+
+.stat-sub { font-size: 12px; color: var(--l3); margin-top: 5px; }
+
+.stat-card.highlight {
+  background: linear-gradient(145deg, rgba(0,122,255,0.05), rgba(88,86,214,0.03));
+  box-shadow: var(--sh-sm), inset 0 0 0 1px rgba(0,122,255,0.12);
+}
+
+/* ═══════════════════════════════════════
+   PROGRESS
+═══════════════════════════════════════ */
+.progress-wrap {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  padding: 22px;
+  margin-bottom: 18px;
+  box-shadow: var(--sh-sm);
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.progress-title { font-weight: 600; font-size: 15px; color: var(--l1); }
+
+.progress-badge {
+  background: var(--blue-s);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--blue);
+}
+
+.progress-bar-bg {
+  height: 8px;
+  background: var(--fill);
+  border-radius: 100px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  background: var(--blue);
+}
+
+.progress-bar-fill.green  { background: var(--green); }
+.progress-bar-fill.yellow { background: var(--orange); }
+
+.progress-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--l3); }
+
+/* ═══════════════════════════════════════
+   MOTIVATION BANNER
+═══════════════════════════════════════ */
+.motive-banner {
+  background: linear-gradient(145deg, rgba(0,122,255,0.05), rgba(88,86,214,0.03));
+  border: 1px solid rgba(0,122,255,0.12);
+  border-radius: var(--r-lg);
+  padding: 18px 22px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--sh-xs);
+}
+
+.motive-emoji { font-size: 38px; flex-shrink: 0; animation: pulse 2s ease-in-out infinite; }
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.motive-text { font-size: 15px; font-weight: 600; line-height: 1.4; color: var(--l1); }
+.motive-sub  { font-size: 13px; color: var(--l3); margin-top: 3px; }
+
+/* ═══════════════════════════════════════
+   LEVEL CARD
+═══════════════════════════════════════ */
+.level-card {
+  background: linear-gradient(145deg, rgba(175,82,222,0.06), rgba(88,86,214,0.03));
+  border: 1px solid rgba(175,82,222,0.15);
+  border-radius: var(--r-lg);
+  padding: 18px 22px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-shadow: var(--sh-xs);
+}
+
+.level-stars { font-size: 24px; letter-spacing: 3px; }
+.level-info .level-name  { font-size: 17px; font-weight: 700; color: var(--purple); }
+.level-info .level-range { font-size: 13px; color: var(--l3); margin-top: 2px; }
+.level-rate { margin-left: auto; text-align: right; }
+.level-rate .rate-num   { font-size: 28px; font-weight: 800; color: var(--blue); letter-spacing: -0.5px; }
+.level-rate .rate-label { font-size: 12px; color: var(--l3); }
+
+/* ═══════════════════════════════════════
+   TABLE
+═══════════════════════════════════════ */
+.table-wrap {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--sh-sm);
+}
+
+.table-header {
+  padding: 16px 20px;
+  border-bottom: 0.5px solid var(--sep);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.table-title { font-weight: 600; font-size: 16px; color: var(--l1); }
+
+table { width: 100%; border-collapse: collapse; }
+
+thead th {
+  background: var(--fill2);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--l3);
+  white-space: nowrap;
+  border-bottom: 0.5px solid var(--sep);
+}
+
+tbody tr { border-top: 0.5px solid var(--border); transition: background 0.12s; }
+tbody tr:hover { background: rgba(0,122,255,0.025); }
+tbody td { padding: 11px 14px; font-size: 13px; vertical-align: middle; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-green  { background: var(--green-s);  color: #1A9E3F; }
+.badge-yellow { background: var(--orange-s); color: #B86600; }
+.badge-red    { background: var(--red-s);    color: var(--red); }
+.badge-blue   { background: var(--blue-s);   color: var(--blue); }
+.badge-purple { background: var(--purple-s); color: var(--purple); }
+
+.table-empty { text-align: center; padding: 56px 24px; color: var(--l3); font-size: 15px; }
+
+.link-icon {
+  color: var(--blue);
+  text-decoration: none;
+  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: var(--r-sm);
+  transition: background 0.15s;
+}
+.link-icon:hover { background: var(--blue-s); }
+
+/* ═══════════════════════════════════════
+   MODAL — iOS sheet
+═══════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0,0,0,0.36);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.26s;
+  pointer-events: none;
+}
+
+@media(min-width:600px) {
+  .modal-overlay { align-items: center; padding: 20px; }
+}
+
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  width: 100%;
+  max-width: 560px;
+  max-height: 92vh;
+  overflow-y: auto;
+  transform: translateY(60px);
+  transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
+  scrollbar-width: thin;
+  scrollbar-color: var(--fill) transparent;
+}
+
+@media(min-width:600px) {
+  .modal { border-radius: var(--r-xl); transform: translateY(20px) scale(0.97); }
+}
+
+.modal-overlay.open .modal { transform: translateY(0) scale(1); }
+
+.modal-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--fill);
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+
+@media(min-width:600px) { .modal-handle { display: none; } }
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 0;
+  margin-bottom: 20px;
+}
+
+.modal-title { font-size: 17px; font-weight: 700; letter-spacing: -0.2px; }
+
+.modal-close {
+  background: var(--fill);
+  border: none;
+  color: var(--l3);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  font-weight: 700;
+}
+.modal-close:hover { background: rgba(118,118,128,0.2); color: var(--l1); }
+
+.modal-body { padding: 0 22px 28px; }
+
+.modal-actions { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+.modal-actions .btn { flex: 1; min-width: 120px; }
+
+/* ── Form sections ── */
+.form-section { margin-bottom: 22px; }
+
+.form-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--l3);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 0.5px solid var(--sep);
+}
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media(max-width:500px) { .form-row { grid-template-columns: 1fr; } }
+
+/* ── Toggle ── */
+.toggle-wrap { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+
+.toggle {
+  width: 51px;
+  height: 31px;
+  background: var(--l4);
+  border-radius: 16px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.25s;
+  flex-shrink: 0;
+  border: none;
+  outline: none;
+}
+
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 27px; height: 27px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.26s cubic-bezier(0.32,0.72,0,1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.22);
+}
+
+.toggle.on { background: var(--green); }
+.toggle.on::after { transform: translateX(20px); }
+.toggle-label { font-size: 14px; font-weight: 500; color: var(--l1); }
+
+/* ── Upload warning ── */
+.upload-warning {
+  background: var(--orange-s);
+  border: 1px solid rgba(255,149,0,0.18);
+  border-radius: var(--r);
+  padding: 12px 16px;
+  font-size: 13px;
+  margin-top: 12px;
+  line-height: 1.5;
+  color: var(--l2);
+}
+.upload-warning strong { color: var(--orange); }
+
+input[type=file] { display: none; }
+
+/* ── Toast ── */
+.toast-container {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: rgba(36,36,40,0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #fff;
+  border-radius: var(--r);
+  padding: 13px 18px;
+  font-size: 14px;
+  min-width: 240px;
+  max-width: 320px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: toastIn 0.28s cubic-bezier(0.32,0.72,0,1);
+  box-shadow: var(--sh-lg);
+  font-weight: 500;
+}
+
+.toast.error   { background: var(--red); }
+.toast.warning { background: var(--orange); }
+.toast-icon { font-size: 18px; flex-shrink: 0; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(16px) scale(0.96); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--l4); border-radius: 3px; }
+
+/* ── Plan ring ── */
+.plan-ring-wrap { display: flex; align-items: center; justify-content: center; padding: 10px 0 20px; }
+.plan-ring-svg { transform: rotate(-90deg); }
+.plan-ring-track { fill: none; stroke: var(--fill); stroke-width: 8; }
+.plan-ring-fill {
+  fill: none; stroke-width: 8; stroke-linecap: round;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1);
+}
+.plan-ring-text { transform: rotate(90deg); transform-origin: center; }
+.plan-ring-num { font-size: 18px; font-weight: 800; fill: var(--l1); text-anchor: middle; font-family: -apple-system, sans-serif; }
+.plan-ring-lbl { font-size: 9px; fill: var(--l3); text-anchor: middle; font-family: -apple-system, sans-serif; }
+
+/* ── Bonus chips ── */
+.bonus-chips { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+.bonus-chip {
+  background: var(--fill);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  flex: 1; min-width: 130px;
+  transition: all 0.2s;
+}
+
+.bonus-chip-label {
+  font-size: 11px; color: var(--l3);
+  text-transform: uppercase; letter-spacing: 0.07em;
+  margin-bottom: 4px; font-weight: 600;
+}
+
+.bonus-chip-val { font-size: 17px; font-weight: 700; color: var(--orange); letter-spacing: -0.3px; }
+.bonus-chip.active { background: var(--orange-s); box-shadow: inset 0 0 0 1px rgba(255,149,0,0.2); }
+
+/* ── Filter bar ── */
+.filter-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+.filter-bar .field { margin-bottom: 0; min-width: 160px; }
+.filter-bar select, .filter-bar input { padding: 9px 14px; font-size: 14px; }
+
+/* ── Manager cards ── */
+.manager-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
+  gap: 14px; margin-bottom: 20px;
+}
+
+.manager-card {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  box-shadow: var(--sh-sm);
+}
+
+.manager-card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+
+.manager-av-lg {
+  width: 46px; height: 46px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, var(--blue), var(--indigo));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+
+.manager-name { font-weight: 600; font-size: 15px; color: var(--l1); }
+.manager-role { font-size: 12px; color: var(--l3); margin-top: 2px; }
+.manager-stats-row { display: flex; gap: 16px; flex-wrap: wrap; }
+.mgr-stat { flex: 1; min-width: 55px; }
+.mgr-stat-val { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+.mgr-stat-lbl { font-size: 11px; color: var(--l3); margin-top: 1px; }
+
+.manager-card-actions {
+  display: flex; gap: 8px;
+  margin-top: 16px; padding-top: 14px;
+  border-top: 0.5px solid var(--sep);
+}
+
+/* ── Chart ── */
+.chart-bar-wrap { margin-top: 8px; }
+.chart-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.chart-label { font-size: 13px; color: var(--l2); min-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chart-track { flex: 1; height: 6px; background: var(--fill); border-radius: 3px; overflow: hidden; }
+.chart-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; background: var(--blue); }
+.chart-count { font-size: 13px; font-weight: 600; color: var(--l3); min-width: 20px; text-align: right; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="s-login" class="screen active">
+  <div class="login-wrap">
+    <div class="app-icon">ТР</div>
+    <div class="login-title">Точка Роста</div>
+    <div class="login-sub">CRM система отдела продаж</div>
+    <div class="login-card">
+      <div class="field">
+        <label>Пароль</label>
+        <input type="password" id="li-pass" placeholder="Введите ваш пароль" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" id="li-btn" onclick="doLogin()">Войти</button>
+      <div class="err" id="li-err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="s-app" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo">Точка Роста</div>
+    <div class="topbar-nav" id="topbar-nav"></div>
+    <div class="topbar-right">
+      <select class="month-sel" id="month-sel" onchange="onMonthChange()"></select>
+      <div class="user-chip">
+        <div class="user-av" id="user-av">?</div>
+        <span class="user-name" id="user-name">...</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Выйти</button>
+    </div>
+  </div>
+  <div class="main-content" id="main-content"></div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Заголовок</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw28FG5IVKb5Cr-vyqBt7a3hTFtEkgxfS3650OwYH1GUWF6fzHnQTXslBLSgs2UYo2vxA/exec';
+
+let STATE = {
+  user: null,
+  month: currentMonthName(),
+  dashboard: null,
+  sales: [],
+  managers: [],
+  courses: [],
+  scale: [],
+};
+
+function currentMonthName() {
+  const now = new Date();
+  const months = ['Январь','Февраль','Март','Апрель','Май','Июнь',
+                  'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  return months[now.getMonth()] + ' ' + now.getFullYear();
+}
+
+function fmt(n) { return new Intl.NumberFormat('ru-RU').format(Math.round(n || 0)); }
+function fmtPct(n) { return ((n||0)*100).toFixed(2) + '%'; }
+
+function api(action, data={}) {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'cb_' + Math.random().toString(36).slice(2);
+    const payload = { action, ...data, callback: callbackName };
+    const params = new URLSearchParams();
+    for (const [key, val] of Object.entries(payload)) {
+      params.append(key, typeof val === 'object' && val !== null ? JSON.stringify(val) : String(val));
+    }
+    const script = document.createElement('script');
+    script.src = SCRIPT_URL + '?' + params.toString();
+    const timer = setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 15000);
+    window[callbackName] = (result) => { cleanup(); resolve(result); };
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[callbackName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+    script.onerror = () => { cleanup(); reject(new Error('Ошибка соединения')); };
+    document.head.appendChild(script);
+  });
+}
+
+function toast(msg, type='success') {
+  const icons = { success:'✅', error:'❌', warning:'⚠️' };
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span class="toast-icon">${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+function showModal(title, html) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
+
+function screen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function setActiveNav(tab) {
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => {
+    c.classList.toggle('active', c.id === 'tab-' + tab);
+  });
+}
+
+// ── AUTH ──
+async function doLogin() {
+  const btn = document.getElementById('li-btn');
+  const err = document.getElementById('li-err');
+  const pass = document.getElementById('li-pass').value.trim();
+  if (!pass) { err.textContent = 'Введите пароль'; return; }
+
+  btn.innerHTML = '<span class="loading-spinner"></span>';
+  btn.disabled = true;
+  err.textContent = '';
+
+  try {
+    const res = await api('login', { password: pass });
+    if (res.success) {
+      STATE.user = res;
+      initApp();
+    } else {
+      err.textContent = res.error || 'Неверный пароль';
+    }
+  } catch(e) {
+    err.textContent = 'Ошибка соединения с сервером';
+  } finally {
+    btn.innerHTML = 'Войти';
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('li-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+function doLogout() {
+  STATE = { user: null, month: currentMonthName(), dashboard: null, sales: [], managers: [], courses: [], scale: [] };
+  screen('s-login');
+}
+
+// ── APP INIT ──
+async function initApp() {
+  screen('s-app');
+  const u = STATE.user;
+
+  document.getElementById('user-av').textContent = (u.name||'?')[0].toUpperCase();
+  document.getElementById('user-name').textContent = u.name;
+
+  const nav = document.getElementById('topbar-nav');
+  const content = document.getElementById('main-content');
+  nav.innerHTML = '';
+  content.innerHTML = '';
+
+  const tabs = getTabsForRole(u.role);
+  tabs.forEach((t, i) => {
+    const b = document.createElement('button');
+    b.className = 'nav-btn' + (i===0?' active':'');
+    b.textContent = t.label;
+    b.dataset.tab = t.id;
+    b.onclick = () => { setActiveNav(t.id); };
+    nav.appendChild(b);
+
+    const div = document.createElement('div');
+    div.className = 'tab-content' + (i===0?' active':'');
+    div.id = 'tab-' + t.id;
+    content.appendChild(div);
+  });
+
+  await loadMonthSelector();
+  await loadCurrentTab();
+}
+
+function getTabsForRole(role) {
+  if (role === 'manager') return [
+    { id: 'dashboard', label: '📊 Дашборд' },
+    { id: 'sales',     label: '📋 Реестр продаж' },
+  ];
+  if (role === 'admin_full') return [
+    { id: 'overview',  label: '📊 Обзор' },
+    { id: 'registry',  label: '📋 Реестр' },
+    { id: 'managers',  label: '👥 Менеджеры' },
+    { id: 'settings',  label: '⚙️ Настройки' },
+  ];
+  if (role === 'admin_view') return [
+    { id: 'overview', label: '📊 Обзор' },
+    { id: 'registry', label: '📋 Реестр' },
+  ];
+  return [];
+}
+
+async function loadMonthSelector() {
+  const sel = document.getElementById('month-sel');
+  sel.innerHTML = '';
+  const now = new Date();
+  const months = ['Январь','Февраль','Март','Апрель','Май','Июнь',
+                  'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const name = months[d.getMonth()] + ' ' + d.getFullYear();
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    if (name === STATE.month) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+async function onMonthChange() {
+  STATE.month = document.getElementById('month-sel').value;
+  await loadCurrentTab();
+}
+
+async function loadCurrentTab() {
+  const activeTab = document.querySelector('.nav-btn.active')?.dataset.tab;
+  if (!activeTab) return;
+  const role = STATE.user.role;
+  if (role === 'manager') {
+    if (activeTab === 'dashboard') await renderManagerDashboard();
+    if (activeTab === 'sales')     await renderManagerSales();
+  } else {
+    if (activeTab === 'overview')  await renderAdminOverview();
+    if (activeTab === 'registry')  await renderAdminRegistry();
+    if (activeTab === 'managers')  await renderAdminManagers();
+    if (activeTab === 'settings')  await renderSettings();
+  }
+}
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.nav-btn');
+  if (!btn) return;
+  setActiveNav(btn.dataset.tab);
+  await loadCurrentTab();
+});
+
+// ── MANAGER DASHBOARD ──
+async function renderManagerDashboard() {
+  const el = document.getElementById('tab-dashboard');
+  el.innerHTML = '<div style="padding:60px;text-align:center;color:var(--l3)"><span class="loading-spinner" style="border-color:rgba(0,122,255,.2);border-top-color:var(--blue)"></span></div>';
+
+  const data = await api('getManagerDashboard', { manager: STATE.user.name, month: STATE.month });
+  STATE.dashboard = data;
+
+  const planPct = Math.min(100, Math.round((data.totalSales / (data.plan || 40)) * 100));
+  const lvl = data.level || '0-10';
+  const rate = fmtPct(data.commissionRate);
+  const motive = getMotivation(data.totalSales, data.plan, data.toNextLevel);
+  const circumference = 2 * Math.PI * 54;
+  const dashOffset = circumference * (1 - planPct / 100);
+
+  el.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="page-title">Мой дашборд</div>
+        <div class="page-sub">${STATE.month} · ${STATE.user.name}</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openAddSaleModal()">+ Добавить сделку</button>
+    </div>
+
+    <div class="motive-banner">
+      <span class="motive-emoji">${motive.emoji}</span>
+      <div>
+        <div class="motive-text">${motive.text}</div>
+        <div class="motive-sub">${motive.sub}</div>
+      </div>
+    </div>
+
+    <div class="level-card">
+      <div class="level-stars">${getLevelStars(data.totalSales)}</div>
+      <div class="level-info">
+        <div class="level-name">${getLevelName(data.totalSales)}</div>
+        <div class="level-range">Уровень ${lvl} продаж</div>
+      </div>
+      <div class="level-rate">
+        <div class="rate-num">${rate}</div>
+        <div class="rate-label">от выручки</div>
+      </div>
+    </div>
+
+    <div class="grid-4">
+      <div class="stat-card highlight">
+        <div class="stat-label">Сделок / план</div>
+        <div class="stat-value blue">${data.totalSales} <span style="font-size:14px;color:var(--l3)">/ ${data.plan}</span></div>
+        <div class="stat-sub">${planPct}% выполнения</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Мои комиссионные</div>
+        <div class="stat-value green">${fmt(data.commission)}</div>
+        <div class="stat-sub">сум</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">100% оплаты</div>
+        <div class="stat-value" style="color:var(--orange)">${data.fullPayments}</div>
+        <div class="stat-sub">клиентов</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Выручка (1й мес)</div>
+        <div class="stat-value">${fmt(data.totalRevenue)}</div>
+        <div class="stat-sub">сум</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="progress-wrap">
+        <div class="progress-header">
+          <span class="progress-title">📊 Выполнение плана</span>
+          <span class="progress-badge">${data.totalSales} / ${data.plan}</span>
+        </div>
+        <div class="plan-ring-wrap">
+          <svg width="130" height="130" viewBox="0 0 130 130" class="plan-ring-svg">
+            <circle cx="65" cy="65" r="54" class="plan-ring-track"/>
+            <circle cx="65" cy="65" r="54" class="plan-ring-fill"
+              stroke="${planPct >= 100 ? 'var(--green)' : planPct >= 75 ? 'var(--orange)' : 'var(--blue)'}"
+              stroke-dasharray="${circumference}"
+              stroke-dashoffset="${dashOffset}"/>
+            <text x="65" y="65" class="plan-ring-text">
+              <tspan x="65" dy="-6" class="plan-ring-num">${planPct}%</tspan>
+              <tspan x="65" dy="18" class="plan-ring-lbl">выполнено</tspan>
+            </text>
+          </svg>
+        </div>
+        ${data.toNextLevel
+          ? `<div style="text-align:center;font-size:13px;color:var(--l3)">До следующего уровня: <strong style="color:var(--blue)">${data.toNextLevel} сделок</strong></div>`
+          : '<div style="text-align:center;font-size:13px;color:var(--green)">🏆 Максимальный уровень!</div>'}
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-header">
+          <span class="progress-title">💎 Прогресс бонуса</span>
+          <span class="progress-badge">${data.fullPayments} / ${data.fullPayments + data.toNextBonus}</span>
+        </div>
+        <div style="padding:10px 0">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill yellow" style="width:${Math.round((data.fullPayments % 20) / 20 * 100)}%"></div>
+          </div>
+          <div class="progress-labels">
+            <span>100% оплаты</span>
+            <span>До бонуса: ${data.toNextBonus}</span>
+          </div>
+          <div class="bonus-chips">
+            <div class="bonus-chip ${data.bonusAmount > 0 ? 'active' : ''}">
+              <div class="bonus-chip-label">Бонус 100%</div>
+              <div class="bonus-chip-val">${fmt(data.bonusAmount || data.nextBonusAmount)}</div>
+            </div>
+            <div class="bonus-chip ${data.premiumBonus > 0 ? 'active' : ''}">
+              <div class="bonus-chip-label">Премия 35+</div>
+              <div class="bonus-chip-val">${fmt(data.premiumBonus || 0)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card" style="margin-bottom:24px;background:linear-gradient(135deg,rgba(52,199,89,.07),var(--s1));border-color:rgba(52,199,89,.2)">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <div class="stat-label">💵 Итого к выплате за ${STATE.month}</div>
+          <div class="stat-value green" style="font-size:32px">${fmt(data.totalEarnings)}</div>
+          <div class="stat-sub">Оклад ${fmt(data.salary)} + Комиссия ${fmt(data.commission)} + Бонусы ${fmt((data.bonusAmount||0)+(data.premiumBonus||0))}</div>
+        </div>
+        <div style="font-size:48px">🏆</div>
+      </div>
+    </div>
+  `;
+}
+
+function getLevelName(n) {
+  if (n <= 10) return 'Старт';
+  if (n <= 20) return 'Развитие';
+  if (n <= 30) return 'Прогресс';
+  if (n <= 40) return 'Мастер';
+  if (n <= 50) return 'Профи';
+  if (n <= 60) return 'Эксперт';
+  return 'Чемпион';
+}
+
+function getLevelStars(n) {
+  if (n <= 10) return '⭐';
+  if (n <= 20) return '⭐⭐';
+  if (n <= 30) return '⭐⭐⭐';
+  if (n <= 40) return '🌟🌟🌟🌟';
+  if (n <= 50) return '💫💫💫💫💫';
+  if (n <= 60) return '🔥🔥🔥🔥🔥🔥';
+  return '🏆🏆🏆🏆🏆🏆🏆';
+}
+
+function getMotivation(sales, plan, toNext) {
+  const pct = Math.round((sales / (plan||40)) * 100);
+  if (sales === 0) return { emoji:'🚀', text:'Начни первую сделку сегодня!', sub:'Каждый великий результат начинается с первого шага.' };
+  if (pct < 25)   return { emoji:'💪', text:'Отличное начало! Разгоняемся!', sub:`Уже ${sales} сделок — продолжай в том же духе!` };
+  if (pct < 50)   return { emoji:'⚡', text:'Хороший темп! Ты на верном пути.', sub:`${toNext ? `До следующего уровня всего ${toNext} сделок!` : 'Держи ритм!'}` };
+  if (pct < 75)   return { emoji:'🔥', text:'Ты в ударе! Больше половины пути пройдено!', sub:'Не останавливайся — финиш уже виден.' };
+  if (pct < 100)  return { emoji:'🎯', text:'Почти у цели! Финальный рывок!', sub:'Осталось совсем немного до выполнения плана!' };
+  if (pct === 100) return { emoji:'🏆', text:'ПЛАН ВЫПОЛНЕН! Поздравляю!', sub:'Ты достиг цели месяца. Каждая следующая сделка — дополнительный бонус!' };
+  return { emoji:'🚀', text:'ПЛАН ПЕРЕВЫПОЛНЕН! Ты легенда!', sub:`${pct}% плана! Максимальные бонусы активированы!` };
+}
+
+// ── MANAGER SALES ──
+async function renderManagerSales() {
+  const el = document.getElementById('tab-sales');
+  el.innerHTML = '<div style="padding:60px;text-align:center;color:var(--l3)"><span class="loading-spinner" style="border-color:rgba(0,122,255,.2);border-top-color:var(--blue)"></span></div>';
+
+  const data = await api('getSales', { month: STATE.month, manager: STATE.user.name });
+  STATE.sales = data.sales || [];
+
+  el.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="page-title">Мои продажи</div>
+        <div class="page-sub">${STATE.month} · ${STATE.sales.length} сделок</div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openAddSaleModal()">+ Добавить сделку</button>
+    </div>
+    ${renderSalesTable(STATE.sales, false)}
+  `;
+}
+
+function renderSalesTable(sales, showManager=true) {
+  if (!sales.length) return `<div class="table-wrap"><div class="table-empty">🗂 Нет сделок за этот месяц</div></div>`;
+
+  const rows = sales.map((s, i) => `
+    <tr>
+      <td style="color:var(--l3)">${s.num || i+1}</td>
+      <td><strong>${s.name||'—'}</strong></td>
+      ${showManager ? `<td><span class="badge badge-blue">${s.manager||'—'}</span></td>` : ''}
+      <td style="color:var(--l3);font-size:12px">${s.group||'—'}</td>
+      <td>${s.course||'—'}</td>
+      <td><span class="badge ${(s.language||'').toLowerCase().includes('рус')?'badge-blue':'badge-purple'}">${s.language||'—'}</span></td>
+      <td style="font-weight:600">${fmt(s.payment)}</td>
+      <td style="color:var(--l3)">${fmt(s.totalContract)}</td>
+      <td><span class="badge ${s.fullPayment==='Да'?'badge-green':'badge-yellow'}">${s.fullPayment==='Да'?'✅ 100%':'⏳ Частично'}</span></td>
+      <td>
+        ${s.contractLink ? `<a href="${s.contractLink}" target="_blank" class="link-icon" title="Договор">📄</a>` : '<span style="color:var(--l4);font-size:12px">Нет</span>'}
+        ${s.paymentLink  ? `<a href="${s.paymentLink}"  target="_blank" class="link-icon" title="Платёж">💳</a>` : ''}
+      </td>
+      <td style="color:var(--l3);font-size:12px">${s.date||'—'}</td>
+    </tr>
+  `).join('');
+
+  return `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>№</th><th>Ф.И.О.</th>
+            ${showManager?'<th>Менеджер</th>':''}
+            <th>Группа</th><th>Курс</th><th>Язык</th>
+            <th>Оплата</th><th>Договор</th><th>Статус</th>
+            <th>Файлы</th><th>Дата</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ── ADD SALE MODAL ──
+async function openAddSaleModal() {
+  const cData = await api('getCourses');
+  STATE.courses = cData.courses || [];
+  const courseOptions = STATE.courses.map(c => `<option value="${c}">${c}</option>`).join('');
+
+  showModal('Новая сделка', `
+    <div class="form-section">
+      <div class="form-section-title">Данные клиента</div>
+      <div class="field"><label>Ф.И.О. ученика *</label><input type="text" id="ns-name" placeholder="Иванов Иван Иванович"></div>
+      <div class="form-row">
+        <div class="field"><label>№ группы *</label><input type="text" id="ns-group" placeholder="261"></div>
+        <div class="field"><label>Курс *</label>
+          <select id="ns-course"><option value="">Выберите курс</option>${courseOptions}</select>
+        </div>
+      </div>
+      <div class="field"><label>Язык курса *</label>
+        <select id="ns-lang">
+          <option value="">Выберите язык</option>
+          <option value="Рус">🇷🇺 Русский</option>
+          <option value="Узб">🇺🇿 Узбекский</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Финансы</div>
+      <div class="form-row">
+        <div class="field"><label>Оплата клиента (сум) *</label><input type="number" id="ns-payment" placeholder="2000000"></div>
+        <div class="field"><label>Общая сумма договора (сум) *</label><input type="number" id="ns-total" placeholder="4000000"></div>
+      </div>
+      <div class="field">
+        <div class="toggle-wrap">
+          <button class="toggle" id="ns-fullpay-toggle" onclick="toggleFullPay()"></button>
+          <span class="toggle-label">Клиент оплатил 100% от суммы договора</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">📄 Договор (обязательно) *</div>
+      <div class="field">
+        <label>Ссылка на договор в Google Drive</label>
+        <input type="url" id="ns-contract-link" placeholder="https://drive.google.com/...">
+      </div>
+      <div style="font-size:12px;color:var(--l3);margin-top:4px">
+        Загрузите подписанный договор в папку месяца на Google Drive и вставьте ссылку.
+      </div>
+    </div>
+
+    <div id="ns-payment-doc-section" class="form-section hidden">
+      <div class="form-section-title">💳 Подтверждение 100% оплаты</div>
+      <div class="field">
+        <label>Ссылка на документ подтверждения</label>
+        <input type="url" id="ns-payment-link" placeholder="https://drive.google.com/...">
+      </div>
+      <div id="ns-payment-warning" class="upload-warning hidden">
+        <strong>⚠️ Внимание!</strong> Без подтверждения оплаты необходимо предоставить
+        сводный отчёт администратору на подпись <strong>очно</strong>.
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="submitSale()">Сохранить сделку</button>
+    </div>
+  `);
+}
+
+let _fullPayOn = false;
+function toggleFullPay() {
+  _fullPayOn = !_fullPayOn;
+  const t = document.getElementById('ns-fullpay-toggle');
+  if (t) t.className = 'toggle' + (_fullPayOn ? ' on' : '');
+  const sec = document.getElementById('ns-payment-doc-section');
+  if (sec) sec.classList.toggle('hidden', !_fullPayOn);
+}
+
+async function submitSale() {
+  const name = document.getElementById('ns-name')?.value.trim();
+  const group = document.getElementById('ns-group')?.value.trim();
+  const course = document.getElementById('ns-course')?.value;
+  const lang = document.getElementById('ns-lang')?.value;
+  const payment = document.getElementById('ns-payment')?.value;
+  const total = document.getElementById('ns-total')?.value;
+  const contractLink = document.getElementById('ns-contract-link')?.value.trim();
+  const paymentLink = document.getElementById('ns-payment-link')?.value.trim();
+
+  if (!name || !group || !course || !lang || !payment || !total) {
+    toast('Заполните все обязательные поля', 'error'); return;
+  }
+  if (!contractLink) {
+    toast('❌ Договор обязателен! Прикрепите ссылку.', 'error'); return;
+  }
+
+  if (_fullPayOn && !paymentLink) {
+    const warn = document.getElementById('ns-payment-warning');
+    if (warn) warn.classList.remove('hidden');
+    const confirmed = confirm('Вы не прикрепили документ подтверждения 100% оплаты.\n\nПродолжить без него?');
+    if (!confirmed) return;
+  }
+
+  const monthContract = Math.round(Number(total) / 2);
+  const res = await api('addSale', {
+    month: STATE.month,
+    sale: {
+      name, group, course, language: lang,
+      payment: Number(payment),
+      totalContract: Number(total),
+      monthContract,
+      fullPayment: _fullPayOn,
+      contractLink,
+      paymentLink: paymentLink || '',
+      manager: STATE.user.name,
+    }
+  });
+
+  if (res.success) {
+    toast('✅ Сделка успешно добавлена!');
+    closeModal();
+    _fullPayOn = false;
+    await renderManagerDashboard();
+    setActiveNav('dashboard');
+  } else {
+    toast(res.error || 'Ошибка при сохранении', 'error');
+  }
+}
+
+// ── ADMIN OVERVIEW ──
+async function renderAdminOverview() {
+  const el = document.getElementById('tab-overview');
+  el.innerHTML = '<div style="padding:60px;text-align:center;color:var(--l3)"><span class="loading-spinner" style="border-color:rgba(0,122,255,.2);border-top-color:var(--blue)"></span></div>';
+
+  const data = await api('getAdminDashboard', { month: STATE.month });
+
+  const totalPlan = (data.managerStats||[]).reduce((s,m)=>s+(m.plan||40),0);
+  const planPct   = totalPlan ? Math.round(data.totalSales/totalPlan*100) : 0;
+
+  const courseEntries = Object.entries(data.courseStats||{}).sort((a,b)=>b[1]-a[1]);
+  const maxCourse = courseEntries[0]?.[1] || 1;
+  const courseChart = courseEntries.map(([name,count]) => `
+    <div class="chart-row">
+      <div class="chart-label">${name}</div>
+      <div class="chart-track"><div class="chart-fill" style="width:${Math.round(count/maxCourse*100)}%"></div></div>
+      <div class="chart-count">${count}</div>
+    </div>
+  `).join('');
+
+  const langStats = data.langStats || {};
+  const totalLang = (langStats['рус']||0) + (langStats['узб']||0) || 1;
+  const rusPct = Math.round((langStats['рус']||0)/totalLang*100);
+  const uzbPct = 100 - rusPct;
+
+  el.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="page-title">Обзор отдела</div>
+        <div class="page-sub">${STATE.month}</div>
+      </div>
+    </div>
+
+    <div class="grid-4">
+      <div class="stat-card highlight">
+        <div class="stat-label">Всего продаж</div>
+        <div class="stat-value blue">${data.totalSales||0}</div>
+        <div class="stat-sub">/ ${totalPlan} план · ${planPct}%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Выручка (1й мес)</div>
+        <div class="stat-value green">${fmt(data.totalRevenue)}</div>
+        <div class="stat-sub">сум</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Оплат от клиентов</div>
+        <div class="stat-value" style="color:var(--orange)">${fmt(data.totalPayment)}</div>
+        <div class="stat-sub">сум</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Менеджеров</div>
+        <div class="stat-value">${(data.managerStats||[]).length}</div>
+        <div class="stat-sub">активных</div>
+      </div>
+    </div>
+
+    <div class="manager-grid">
+      ${(data.managerStats||[]).map(m => {
+        const mPct = Math.min(100, Math.round(m.sales/(m.plan||40)*100));
+        return `
+        <div class="manager-card">
+          <div class="manager-card-top">
+            <div class="manager-av-lg">${m.name[0]}</div>
+            <div>
+              <div class="manager-name">${m.name}</div>
+              <div class="manager-role">Уровень ${m.level} · ${fmtPct(m.rate)}</div>
+            </div>
+          </div>
+          <div class="manager-stats-row">
+            <div class="mgr-stat">
+              <div class="mgr-stat-val" style="color:var(--blue)">${m.sales}</div>
+              <div class="mgr-stat-lbl">продаж</div>
+            </div>
+            <div class="mgr-stat">
+              <div class="mgr-stat-val" style="color:var(--l3)">${m.plan}</div>
+              <div class="mgr-stat-lbl">план</div>
+            </div>
+            <div class="mgr-stat">
+              <div class="mgr-stat-val" style="color:var(--green)">${fmt(m.commission)}</div>
+              <div class="mgr-stat-lbl">комиссия</div>
+            </div>
+          </div>
+          <div style="margin-top:14px">
+            <div class="progress-bar-bg" style="height:6px">
+              <div class="progress-bar-fill ${mPct>=100?'green':mPct>=75?'yellow':''}" style="width:${mPct}%"></div>
+            </div>
+            <div style="font-size:11px;color:var(--l3);margin-top:4px">${mPct}% плана</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="grid-2">
+      <div class="stat-card">
+        <div class="stat-label" style="margin-bottom:16px">📚 Топ курсов</div>
+        <div class="chart-bar-wrap">${courseChart || '<div style="color:var(--l3);font-size:13px">Нет данных</div>'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label" style="margin-bottom:16px">🌐 Язык курсов</div>
+        <div style="display:flex;gap:24px;align-items:center;justify-content:center;padding:20px 0">
+          <div style="text-align:center">
+            <div style="font-size:36px;font-weight:800;color:var(--blue);letter-spacing:-1px">${rusPct}%</div>
+            <div style="font-size:13px;color:var(--l3);margin-top:4px">🇷🇺 Русский</div>
+            <div style="font-size:12px;color:var(--l4)">${langStats['рус']||0} сделок</div>
+          </div>
+          <div style="width:1px;height:60px;background:var(--sep)"></div>
+          <div style="text-align:center">
+            <div style="font-size:36px;font-weight:800;color:var(--purple);letter-spacing:-1px">${uzbPct}%</div>
+            <div style="font-size:13px;color:var(--l3);margin-top:4px">🇺🇿 Узбекский</div>
+            <div style="font-size:12px;color:var(--l4)">${langStats['узб']||0} сделок</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── ADMIN REGISTRY ──
+async function renderAdminRegistry() {
+  const el = document.getElementById('tab-registry');
+  el.innerHTML = '<div style="padding:60px;text-align:center;color:var(--l3)"><span class="loading-spinner" style="border-color:rgba(0,122,255,.2);border-top-color:var(--blue)"></span></div>';
+
+  const data = await api('getSales', { month: STATE.month, manager: 'all' });
+  STATE.sales = data.sales || [];
+
+  const mgrs = [...new Set(STATE.sales.map(s=>s.manager).filter(Boolean))];
+  const mgrOptions = mgrs.map(m=>`<option value="${m}">${m}</option>`).join('');
+
+  el.innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="page-title">Реестр продаж</div>
+        <div class="page-sub">${STATE.month} · ${STATE.sales.length} сделок</div>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <div class="field">
+        <select id="reg-filter-mgr" onchange="filterRegistry()">
+          <option value="">Все менеджеры</option>${mgrOptions}
+        </select>
+      </div>
+      <div class="field">
+        <select id="reg-filter-pay" onchange="filterRegistry()">
+          <option value="">Все оплаты</option>
+          <option value="100">100% оплата</option>
+          <option value="partial">Частичная</option>
+        </select>
+      </div>
+      <input type="text" id="reg-search" placeholder="🔍 Поиск по ФИО..."
+        style="background:var(--fill);border:1.5px solid transparent;border-radius:var(--r);padding:9px 14px;color:var(--l1);font-family:var(--font);font-size:14px;outline:none;min-width:200px;transition:border-color .2s"
+        oninput="filterRegistry()"
+        onfocus="this.style.borderColor='var(--blue)'"
+        onblur="this.style.borderColor='transparent'">
+    </div>
+    <div id="reg-table">${renderSalesTableAdmin(STATE.sales)}</div>
+  `;
+}
+
+function filterRegistry() {
+  const mgr    = document.getElementById('reg-filter-mgr')?.value;
+  const pay    = document.getElementById('reg-filter-pay')?.value;
+  const search = document.getElementById('reg-search')?.value.toLowerCase();
+
+  let filtered = STATE.sales;
+  if (mgr)              filtered = filtered.filter(s=>s.manager===mgr);
+  if (pay === '100')    filtered = filtered.filter(s=>s.fullPayment==='Да');
+  if (pay === 'partial')filtered = filtered.filter(s=>s.fullPayment!=='Да');
+  if (search)           filtered = filtered.filter(s=>(s.name||'').toLowerCase().includes(search));
+
+  document.getElementById('reg-table').innerHTML = renderSalesTableAdmin(filtered);
+}
+
+function renderSalesTableAdmin(sales) {
+  if (!sales.length) return `<div class="table-wrap"><div class="table-empty">🗂 Нет сделок</div></div>`;
+  const canDelete = STATE.user.role === 'admin_full';
+
+  const rows = sales.map((s,i) => `
+    <tr>
+      <td style="color:var(--l3)">${s.num||i+1}</td>
+      <td><strong>${s.name||'—'}</strong></td>
+      <td><span class="badge badge-blue">${s.manager||'—'}</span></td>
+      <td style="color:var(--l3);font-size:12px">${s.group||'—'}</td>
+      <td>${s.course||'—'}</td>
+      <td><span class="badge ${(s.language||'').toLowerCase().includes('рус')?'badge-blue':'badge-purple'}">${s.language||'—'}</span></td>
+      <td style="font-weight:600">${fmt(s.payment)}</td>
+      <td>${fmt(s.totalContract)}</td>
+      <td>${fmt(s.monthContract)}</td>
+      <td><span class="badge ${s.fullPayment==='Да'?'badge-green':'badge-yellow'}">${s.fullPayment==='Да'?'✅ 100%':'⏳ Частично'}</span></td>
+      <td>
+        ${s.contractLink?`<a href="${s.contractLink}" target="_blank" class="link-icon">📄</a>`:'<span style="color:var(--l4);font-size:12px">Нет</span>'}
+        ${s.paymentLink ?`<a href="${s.paymentLink}"  target="_blank" class="link-icon">💳</a>`:''}
+      </td>
+      <td style="color:var(--l3);font-size:12px">${s.date||'—'}</td>
+      ${canDelete?`<td><button class="btn btn-danger btn-sm" onclick="deleteSale(${s.rowIndex})">✕</button></td>`:'<td></td>'}
+    </tr>
+  `).join('');
+
+  return `
+    <div class="table-wrap" style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>№</th><th>Ф.И.О.</th><th>Менеджер</th><th>Группа</th>
+            <th>Курс</th><th>Язык</th><th>Оплата</th><th>Договор</th>
+            <th>1й мес</th><th>Статус</th><th>Файлы</th><th>Дата</th>
+            ${canDelete?'<th></th>':''}
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function deleteSale(rowIndex) {
+  if (!confirm('Удалить эту сделку?')) return;
+  const res = await api('deleteSale', { rowIndex, month: STATE.month, requester: STATE.user.role });
+  if (res.success) { toast('Сделка удалена'); await renderAdminRegistry(); }
+  else toast(res.error || 'Ошибка', 'error');
+}
+
+// ── ADMIN MANAGERS ──
+async function renderAdminManagers() {
+  const el = document.getElementById('tab-managers');
+  el.innerHTML = '<div style="padding:60px;text-align:center;color:var(--l3)"><span class="loading-spinner" style="border-color:rgba(0,122,255,.2);border-top-color:var(--blue)"></span></div>';
+
+  const [mgData, scData] = await Promise.all([api('getManagers'), api('getScales')]);
+  STATE.managers = mgData.managers || [];
+  STATE.scale    = scData.scale    || [];
+
+  const inpStyle = 'background:var(--fill);border:1.5px solid transparent;border-radius:8px;padding:8px 12px;color:var(--l1);font-family:var(--font);font-size:14px;width:100%;outline:none;transition:border-color .2s';
+
+  const cards = STATE.managers.map(m => `
+    <div class="manager-card">
+      <div class="manager-card-top">
+        <div class="manager-av-lg">${m.name[0]}</div>
+        <div>
+          <div class="manager-name">${m.name}</div>
+          <div class="manager-role">Оклад: ${fmt(m.salary)} сум</div>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:10px">
+        <label>План на ${STATE.month}</label>
+        <input type="number" id="plan-${m.rowIndex}" placeholder="40"
+          style="${inpStyle}"
+          onfocus="this.style.borderColor='var(--blue)'"
+          onblur="this.style.borderColor='transparent'">
+      </div>
+      <div class="manager-card-actions">
+        <button class="btn btn-primary btn-sm" style="flex:1" onclick="savePlan(${m.rowIndex},'${m.name}')">💾 Сохранить план</button>
+        <button class="btn btn-ghost btn-sm" onclick="editManager(${m.rowIndex},'${m.name}','${m.password}',${m.salary})">✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteManager(${m.rowIndex})">🗑</button>
+      </div>
+    </div>
+  `).join('');
+
+  el.innerHTML = `
+    <div class="page-header">
+      <div><div class="page-title">Менеджеры</div><div class="page-sub">Управление командой</div></div>
+      <button class="btn btn-primary btn-sm" onclick="addManagerModal()">+ Добавить</button>
+    </div>
+    <div class="manager-grid">${cards}</div>
+  `;
+}
+
+async function savePlan(rowIndex, name) {
+  const val = document.getElementById(`plan-${rowIndex}`)?.value;
+  if (!val) { toast('Введите план', 'warning'); return; }
+  const res = await api('setManagerPlan', { manager: name, month: STATE.month, plan: Number(val) });
+  if (res.success) toast(`✅ План для ${name} сохранён: ${val} продаж`);
+  else toast(res.error||'Ошибка', 'error');
+}
+
+function editManager(rowIndex, name, password, salary) {
+  showModal(`Редактировать: ${name}`, `
+    <div class="field"><label>Имя</label><input type="text" id="em-name" value="${name}"></div>
+    <div class="field"><label>Пароль (для входа)</label><input type="text" id="em-pass" value="${password}"></div>
+    <div class="field"><label>Оклад (сум)</label><input type="number" id="em-sal" value="${salary}"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveManager(${rowIndex})">Сохранить</button>
+    </div>
+  `);
+}
+
+async function saveManager(rowIndex) {
+  const name = document.getElementById('em-name')?.value.trim();
+  const pass = document.getElementById('em-pass')?.value.trim();
+  const sal  = document.getElementById('em-sal')?.value;
+  if (!name||!pass) { toast('Заполните все поля','error'); return; }
+  const res = await api('updateManager', { rowIndex, name, password: pass, salary: Number(sal) });
+  if (res.success) { toast('✅ Данные менеджера обновлены'); closeModal(); await renderAdminManagers(); }
+  else toast(res.error||'Ошибка','error');
+}
+
+function addManagerModal() {
+  showModal('Новый менеджер', `
+    <div class="field"><label>Имя</label><input type="text" id="am-name" placeholder="Имя менеджера"></div>
+    <div class="field"><label>Пароль (для входа)</label><input type="text" id="am-pass" placeholder="Придумайте пароль"></div>
+    <div class="field"><label>Оклад (сум)</label><input type="number" id="am-sal" placeholder="5000000"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="doAddManager()">Добавить</button>
+    </div>
+  `);
+}
+
+async function doAddManager() {
+  const name = document.getElementById('am-name')?.value.trim();
+  const pass = document.getElementById('am-pass')?.value.trim();
+  const sal  = document.getElementById('am-sal')?.value;
+  if (!name||!pass) { toast('Заполните все поля','error'); return; }
+  const res = await api('addManager', { name, password: pass, salary: Number(sal)||0 });
+  if (res.success) { toast('✅ Менеджер добавлен'); closeModal(); await renderAdminManagers(); }
+  else toast(res.error||'Ошибка','error');
+}
+
+async function deleteManager(rowIndex) {
+  if (!confirm('Удалить менеджера?')) return;
+  const res = await api('deleteManager', { rowIndex });
+  if (res.success) { toast('Менеджер удалён'); await renderAdminManagers(); }
+  else toast(res.error||'Ошибка','error');
+}
+
+// ── SETTINGS ──
+async function renderSettings() {
+  const el = document.getElementById('tab-settings');
+  el.innerHTML = '<div style="padding:60px;text-align:center;color:var(--l3)"><span class="loading-spinner" style="border-color:rgba(0,122,255,.2);border-top-color:var(--blue)"></span></div>';
+
+  const [scData, cData] = await Promise.all([api('getScales'), api('getCourses')]);
+  STATE.scale   = scData.scale   || [];
+  STATE.courses = cData.courses  || [];
+
+  const inp = 'background:var(--fill);border:1px solid transparent;border-radius:6px;padding:6px 10px;color:var(--l1);font-family:var(--font);font-size:13px;width:100%;outline:none';
+
+  const scaleRows = STATE.scale.map((s,i) => `
+    <tr>
+      <td><input type="number" value="${s.min}"         id="sc-min-${i}"  style="${inp}"></td>
+      <td><input type="number" value="${s.max}"         id="sc-max-${i}"  style="${inp}"></td>
+      <td><input type="number" step="0.001" value="${s.rate}" id="sc-rate-${i}" style="${inp}"></td>
+      <td><input type="number" value="${s.bonus100||''}" id="sc-b100-${i}" style="${inp}" placeholder="—"></td>
+      <td><input type="number" value="${s.premium35||''}" id="sc-p35-${i}" style="${inp}" placeholder="—"></td>
+    </tr>
+  `).join('');
+
+  const courseList = STATE.courses.map(c => `
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:0.5px solid var(--sep)">
+      <span style="flex:1;font-size:14px;color:var(--l1)">${c}</span>
+      <button class="btn btn-danger btn-xs" onclick="deleteCourse('${c}')">Удалить</button>
+    </div>
+  `).join('');
+
+  el.innerHTML = `
+    <div class="page-header">
+      <div><div class="page-title">Настройки</div><div class="page-sub">Шкала процентов и курсы</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="table-wrap">
+        <div class="table-header">
+          <span class="table-title">📊 Шкала процентов</span>
+          <button class="btn btn-primary btn-sm" onclick="saveScales()">💾 Сохранить</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>MIN</th><th>MAX</th><th>%</th><th>Бонус 100%</th><th>Премия 35+</th></tr></thead>
+            <tbody id="scale-tbody">${scaleRows}</tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <span style="font-weight:600;font-size:16px">📚 Список курсов</span>
+          <button class="btn btn-primary btn-sm" onclick="addCoursePrompt()">+ Добавить</button>
+        </div>
+        <div id="courses-list">${courseList}</div>
+      </div>
+    </div>
+  `;
+}
+
+async function saveScales() {
+  const scale = STATE.scale.map((s,i) => ({
+    min:      Number(document.getElementById(`sc-min-${i}`)?.value  || s.min),
+    max:      Number(document.getElementById(`sc-max-${i}`)?.value  || s.max),
+    rate:     Number(document.getElementById(`sc-rate-${i}`)?.value || s.rate),
+    bonus100: Number(document.getElementById(`sc-b100-${i}`)?.value) || 0,
+    premium35:Number(document.getElementById(`sc-p35-${i}`)?.value)  || 0,
+  }));
+  const res = await api('updateScales', { scale });
+  if (res.success) toast('✅ Шкала обновлена');
+  else toast(res.error||'Ошибка','error');
+}
+
+function addCoursePrompt() {
+  const name = prompt('Название нового курса:');
+  if (!name?.trim()) return;
+  api('addCourse', { course: name.trim() }).then(res => {
+    if (res.success) { toast('✅ Курс добавлен'); renderSettings(); }
+    else toast(res.error||'Ошибка','error');
+  });
+}
+
+async function deleteCourse(course) {
+  if (!confirm(`Удалить курс "${course}"?`)) return;
+  const res = await api('deleteCourse', { course });
+  if (res.success) { toast('Курс удалён'); await renderSettings(); }
+  else toast(res.error||'Ошибка','error');
+}
+</script>
+</body>
+</html>
