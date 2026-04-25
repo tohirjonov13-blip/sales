@@ -885,6 +885,46 @@ input[type=file] { display: none; }
 .chart-track { flex: 1; height: 6px; background: var(--fill); border-radius: 3px; overflow: hidden; }
 .chart-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; background: var(--blue); }
 .chart-count { font-size: 13px; font-weight: 600; color: var(--l3); min-width: 20px; text-align: right; }
+
+/* ── Weekly bar chart ── */
+.week-chart { display: flex; align-items: flex-end; gap: 10px; height: 90px; padding: 0 4px; }
+.week-col { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; }
+.week-bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; min-height: 8px; }
+.week-bar { width: 100%; border-radius: 5px 5px 0 0; transition: height 0.6s ease; min-height: 4px; }
+.week-num { font-size: 11px; color: var(--l3); font-weight: 500; }
+.week-val { font-size: 11px; font-weight: 700; color: var(--l2); }
+
+/* ── Earnings breakdown ── */
+.earnings-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--sep); }
+.earn-chip { background: var(--fill2); border-radius: 8px; padding: 5px 9px; flex: 1; min-width: 80px; }
+.earn-chip-lbl { font-size: 10px; color: var(--l3); margin-bottom: 2px; }
+.earn-chip-val { font-size: 12px; font-weight: 700; color: var(--l1); }
+.earn-chip.total { background: rgba(52,199,89,0.10); }
+.earn-chip.total .earn-chip-val { color: var(--green); font-size: 13px; }
+
+/* ── Conversion badge ── */
+.conv-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(175,82,222,0.10); color: var(--purple); border-radius: 100px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+
+/* ── Trend chart ── */
+.trend-period-bar { display: flex; gap: 4px; background: var(--fill); border-radius: 10px; padding: 3px; margin-bottom: 20px; width: fit-content; }
+.trend-period-btn { padding: 6px 16px; border-radius: 8px; border: none; background: none; font-family: var(--font); font-size: 13px; font-weight: 500; color: var(--l3); cursor: pointer; transition: all .15s; }
+.trend-period-btn.active { background: var(--surface); color: var(--blue); font-weight: 600; box-shadow: var(--sh-xs); }
+.trend-bars { display: flex; align-items: flex-end; gap: 8px; height: 120px; padding: 0 4px; }
+.trend-col { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; min-width: 36px; }
+.trend-bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; }
+.trend-bar { width: 100%; border-radius: 5px 5px 0 0; transition: height 0.6s ease; min-height: 4px; background: var(--blue); }
+.trend-month { font-size: 10px; color: var(--l3); text-align: center; white-space: nowrap; }
+.trend-count { font-size: 11px; font-weight: 700; color: var(--l2); }
+.trend-delta { font-size: 10px; font-weight: 600; }
+.trend-delta.up   { color: var(--green); }
+.trend-delta.down { color: var(--red); }
+
+/* ── Marketing grid ── */
+.mkt-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.mkt-table th { background: var(--fill); padding: 10px 12px; text-align: left; font-weight: 600; color: var(--l3); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-radius: 6px; }
+.mkt-table td { padding: 10px 12px; border-bottom: 0.5px solid var(--sep); }
+.mkt-table input[type=number] { width: 72px; background: var(--fill); border: 1.5px solid transparent; border-radius: 7px; padding: 5px 8px; font-family: var(--font); font-size: 13px; color: var(--l1); outline: none; transition: border-color .15s; text-align: center; }
+.mkt-table input[type=number]:focus { border-color: var(--blue); background: var(--surface); }
 </style>
 </head>
 <body>
@@ -927,7 +967,7 @@ input[type=file] { display: none; }
 </div>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxswWnjJzzC5dzmMm8zqZtngtNp9-FlTmZCKZsYF80iew5HfF0CkktjJkKa6-njl3Ryjw/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw28FG5IVKb5Cr-vyqBt7a3hTFtEkgxfS3650OwYH1GUWF6fzHnQTXslBLSgs2UYo2vxA/exec';
 
 let STATE = {
   user: null,
@@ -1136,6 +1176,9 @@ function getTabsForRole(role) {
     { id: 'overview', label: '📊 Обзор' },
     { id: 'registry', label: '📋 Реестр' },
   ];
+  if (role === 'marketing') return [
+    { id: 'marketing', label: '🎯 Лиды' },
+  ];
   return [];
 }
 
@@ -1168,12 +1211,62 @@ async function loadCurrentTab() {
   if (role === 'manager') {
     if (activeTab === 'dashboard') await renderManagerDashboard();
     if (activeTab === 'sales')     await renderManagerSales();
+  } else if (role === 'marketing') {
+    if (activeTab === 'marketing') await renderMarketingDashboard();
   } else {
     if (activeTab === 'overview')  await renderAdminOverview();
     if (activeTab === 'registry')  await renderAdminRegistry();
     if (activeTab === 'managers')  await renderAdminManagers();
     if (activeTab === 'settings')  await renderSettings();
   }
+}
+
+// ── HELPERS ──
+function getCalendarWeeks(monthName) {
+  const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь',
+                  'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  const SHORT  = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  const parts  = monthName.split(' ');
+  const mIdx   = MONTHS.indexOf(parts[0]);
+  const year   = parseInt(parts[1]);
+  if (mIdx === -1 || isNaN(year)) return [];
+
+  const firstDay = new Date(year, mIdx, 1);
+  const lastDay  = new Date(year, mIdx + 1, 0);
+  const dow      = firstDay.getDay();
+  const offset   = dow === 0 ? -6 : 1 - dow;
+  const firstMon = new Date(firstDay);
+  firstMon.setDate(firstDay.getDate() + offset);
+
+  const weeks = [];
+  let cur = new Date(firstMon), num = 1;
+  while (cur <= lastDay) {
+    const end  = new Date(cur); end.setDate(cur.getDate() + 6);
+    const oS   = cur < firstDay ? firstDay : new Date(cur);
+    const oE   = end > lastDay  ? lastDay  : new Date(end);
+    weeks.push({ num, start: new Date(cur), end: new Date(end),
+      label: `${oS.getDate()}–${oE.getDate()} ${SHORT[mIdx]}` });
+    cur.setDate(cur.getDate() + 7); num++;
+  }
+  return weeks;
+}
+
+function getMonthsForPeriod(period) {
+  const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь',
+                  'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  const now = new Date();
+  const list = [];
+  if (period === 'year') {
+    for (let m = 0; m <= now.getMonth(); m++)
+      list.push(MONTHS[m] + ' ' + now.getFullYear());
+  } else {
+    const count = period === 'quarter' ? 3 : 6;
+    for (let i = count - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      list.push(MONTHS[d.getMonth()] + ' ' + d.getFullYear());
+    }
+  }
+  return list;
 }
 
 document.addEventListener('click', async (e) => {
@@ -1380,7 +1473,7 @@ function renderSalesTable(sales, showManager=true) {
       <td style="color:var(--l3)">${fmt(s.totalContract)}</td>
       <td><span class="badge ${s.fullPayment==='Да'?'badge-green':'badge-yellow'}">${s.fullPayment==='Да'?'✅ 100%':'⏳ Частично'}</span></td>
       <td>
-        ${s.contractLink ? `<a href="${s.contractLink}" target="_blank" class="link-icon" title="Договор">📄</a>` : '<span style="color:var(--l4);font-size:12px">Нет</span>'}
+        ${s.contractLink ? `<span style="font-size:12px;font-weight:600;color:var(--l2)">№${s.contractLink}</span>` : '<span style="color:var(--l4);font-size:12px">—</span>'}
         ${s.paymentLink  ? `<a href="${s.paymentLink}"  target="_blank" class="link-icon" title="Платёж">💳</a>` : ''}
       </td>
       <td style="color:var(--l3);font-size:12px">${s.date||'—'}</td>
@@ -1447,11 +1540,8 @@ async function openAddSaleModal() {
     <div class="form-section">
       <div class="form-section-title">📄 Договор (обязательно) *</div>
       <div class="field">
-        <label>Ссылка на договор в Google Drive</label>
-        <input type="url" id="ns-contract-link" placeholder="https://drive.google.com/...">
-      </div>
-      <div style="font-size:12px;color:var(--l3);margin-top:4px">
-        Загрузите подписанный договор в папку месяца на Google Drive и вставьте ссылку.
+        <label>Номер договора *</label>
+        <input type="text" id="ns-contract-link" placeholder="Например: 2024-04-157">
       </div>
     </div>
 
@@ -1497,7 +1587,7 @@ async function submitSale() {
     toast('Заполните все обязательные поля', 'error'); return;
   }
   if (!contractLink) {
-    toast('❌ Договор обязателен! Прикрепите ссылку.', 'error'); return;
+    toast('❌ Укажите номер договора.', 'error'); return;
   }
 
   if (_fullPayOn && !paymentLink) {
@@ -1533,37 +1623,177 @@ async function submitSale() {
   }
 }
 
+// ── MARKETING DASHBOARD ──
+async function renderMarketingDashboard() {
+  const el = document.getElementById('tab-marketing');
+  el.innerHTML = '<div style="padding:60px;text-align:center"><span class="loading-spinner" style="border-color:rgba(0,122,255,.2);border-top-color:var(--blue)"></span></div>';
+
+  const [mgData] = await Promise.all([api('getManagers')]);
+  const managers = (mgData.managers || []).map(m => m.name);
+  const weeks    = getCalendarWeeks(STATE.month);
+  const mktData  = await api('getMarketingData', { month: STATE.month });
+  const leadsMap = {};
+  (mktData.leads || []).forEach(l => { leadsMap[l.manager + '_' + l.week] = l.leads; });
+
+  const weekHeaders = weeks.map(w => `<th>${w.num} нед.<br><span style="font-weight:400;font-size:10px">${w.label}</span></th>`).join('');
+  const rows = managers.map(mgr => {
+    const cells = weeks.map(w => {
+      const val = leadsMap[mgr + '_' + w.num] || '';
+      return `<td><input type="number" min="0" id="mkt-${mgr}-${w.num}" value="${val}" placeholder="0"></td>`;
+    }).join('');
+    return `<tr><td style="font-weight:600;color:var(--l1)">${mgr}</td>${cells}</tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="page-header">
+      <div><div class="page-title">🎯 Лиды по менеджерам</div><div class="page-sub">${STATE.month}</div></div>
+      <button class="btn btn-primary btn-sm" onclick="saveMarketingData()">💾 Сохранить</button>
+    </div>
+    <div class="stat-card" style="overflow-x:auto;padding:0">
+      <table class="mkt-table">
+        <thead><tr><th>Менеджер</th>${weekHeaders}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div style="margin-top:14px;font-size:13px;color:var(--l3)">
+      Введите количество лидов, переданных каждому менеджеру за каждую неделю месяца. Конверсия рассчитывается автоматически в панели администратора.
+    </div>`;
+}
+
+async function saveMarketingData() {
+  const managers = (STATE.managers.length ? STATE.managers : (await api('getManagers')).managers || []);
+  const weeks    = getCalendarWeeks(STATE.month);
+  const promises = [];
+  managers.forEach(m => {
+    weeks.forEach(w => {
+      const el  = document.getElementById(`mkt-${m.name}-${w.num}`);
+      const val = el ? parseInt(el.value) || 0 : 0;
+      promises.push(api('setMarketingData', { month: STATE.month, manager: m.name, week: w.num, leads: val }));
+    });
+  });
+  await Promise.all(promises);
+  toast('✅ Данные по лидам сохранены');
+}
+
 // ── ADMIN OVERVIEW ──
 async function renderAdminOverview() {
   const el = document.getElementById('tab-overview');
   el.innerHTML = '<div style="padding:60px;text-align:center;color:var(--l3)"><span class="loading-spinner" style="border-color:rgba(0,122,255,.2);border-top-color:var(--blue)"></span></div>';
 
   const data = await api('getAdminDashboard', { month: STATE.month });
-
+  const isView    = STATE.user.role === 'admin_view';
   const totalPlan = (data.managerStats||[]).reduce((s,m)=>s+(m.plan||40),0);
   const planPct   = totalPlan ? Math.round(data.totalSales/totalPlan*100) : 0;
 
+  // ── Недельная динамика ──
+  const weeks     = data.weeklySales || [];
+  const maxWSales = Math.max(1, ...weeks.map(w => w.sales));
+  const weekBars  = weeks.map(w => {
+    const h   = Math.max(4, Math.round(w.sales / maxWSales * 80));
+    const col = w.sales === maxWSales ? 'var(--green)' : 'var(--blue)';
+    return `<div class="week-col">
+      <div class="week-val">${w.sales}</div>
+      <div class="week-bar-wrap"><div class="week-bar" style="height:${h}px;background:${col}"></div></div>
+      <div class="week-num">${w.label}</div>
+    </div>`;
+  }).join('');
+
+  // ── Прогноз темпа ──
+  let paceHtml = '';
+  if (data.planPace) {
+    const p = data.planPace;
+    const projColor = p.projected >= totalPlan ? 'var(--green)' : 'var(--red)';
+    const remaining = Math.max(0, totalPlan - data.totalSales);
+    paceHtml = `
+      <div class="stat-card" style="display:flex;gap:28px;flex-wrap:wrap;align-items:center">
+        <div>
+          <div class="stat-label">📈 Прогноз к концу месяца</div>
+          <div style="font-size:28px;font-weight:800;color:${projColor};letter-spacing:-1px;margin-top:4px">${p.projected} <span style="font-size:14px;font-weight:500;color:var(--l3)">из ${totalPlan}</span></div>
+          <div style="font-size:12px;color:var(--l3);margin-top:2px">Темп: ${p.salesPerDay} сделок/день</div>
+        </div>
+        <div style="width:0.5px;height:50px;background:var(--sep)"></div>
+        <div>
+          <div class="stat-label">⏳ До конца месяца</div>
+          <div style="font-size:28px;font-weight:800;color:var(--orange);letter-spacing:-1px;margin-top:4px">${p.daysLeft} <span style="font-size:14px;font-weight:500;color:var(--l3)">дн.</span></div>
+          <div style="font-size:12px;color:var(--l3);margin-top:2px">Осталось сделок: <b>${remaining}</b></div>
+        </div>
+      </div>`;
+  }
+
+  // ── Карточки менеджеров ──
+  const mgrCards = (data.managerStats||[]).map(m => {
+    const mPct = Math.min(100, Math.round(m.sales/(m.plan||40)*100));
+    const convBadge = m.conversion !== null
+      ? `<span class="conv-badge">🎯 ${m.conversion}%</span>`
+      : `<span style="font-size:11px;color:var(--l4)">Лиды не введены</span>`;
+
+    const earningsHtml = !isView ? `
+      <div class="earnings-row">
+        <div class="earn-chip"><div class="earn-chip-lbl">Оклад</div><div class="earn-chip-val">${fmt(m.salary)}</div></div>
+        <div class="earn-chip"><div class="earn-chip-lbl">Комиссия</div><div class="earn-chip-val">${fmt(m.commission)}</div></div>
+        <div class="earn-chip"><div class="earn-chip-lbl">Бонус ур.</div><div class="earn-chip-val">${fmt(m.premiumBonus)}</div></div>
+        <div class="earn-chip"><div class="earn-chip-lbl">KPI 100%</div><div class="earn-chip-val">${fmt(m.kpiBonus)}</div></div>
+        <div class="earn-chip total"><div class="earn-chip-lbl">Итого</div><div class="earn-chip-val">${fmt(m.totalEarnings)}</div></div>
+      </div>` : '';
+
+    return `
+    <div class="manager-card">
+      <div class="manager-card-top">
+        <div class="manager-av-lg">${m.name[0]}</div>
+        <div style="flex:1">
+          <div class="manager-name">${m.name}</div>
+          <div class="manager-role">Ур. ${m.level}${!isView ? ' · ' + fmtPct(m.rate) : ''}</div>
+        </div>
+        ${convBadge}
+      </div>
+      <div class="manager-stats-row">
+        <div class="mgr-stat"><div class="mgr-stat-val" style="color:var(--blue)">${m.sales}</div><div class="mgr-stat-lbl">продаж</div></div>
+        <div class="mgr-stat"><div class="mgr-stat-val" style="color:var(--l3)">${m.plan}</div><div class="mgr-stat-lbl">план</div></div>
+        <div class="mgr-stat"><div class="mgr-stat-val" style="color:var(--orange)">${m.fullPayments}</div><div class="mgr-stat-lbl">100%</div></div>
+        ${!isView ? `<div class="mgr-stat"><div class="mgr-stat-val" style="color:var(--green)">${fmt(m.commission)}</div><div class="mgr-stat-lbl">комиссия</div></div>` : ''}
+      </div>
+      <div style="margin-top:12px">
+        <div class="progress-bar-bg" style="height:6px">
+          <div class="progress-bar-fill ${mPct>=100?'green':mPct>=75?'yellow':''}" style="width:${mPct}%"></div>
+        </div>
+        <div style="font-size:11px;color:var(--l3);margin-top:4px">${mPct}% плана</div>
+      </div>
+      ${earningsHtml}
+    </div>`;
+  }).join('');
+
+  // ── Курсы ──
   const courseEntries = Object.entries(data.courseStats||{}).sort((a,b)=>b[1]-a[1]);
-  const maxCourse = courseEntries[0]?.[1] || 1;
-  const courseChart = courseEntries.map(([name,count]) => `
+  const maxCourse     = courseEntries[0]?.[1] || 1;
+  const courseChart   = courseEntries.map(([name,count]) => `
     <div class="chart-row">
       <div class="chart-label">${name}</div>
       <div class="chart-track"><div class="chart-fill" style="width:${Math.round(count/maxCourse*100)}%"></div></div>
       <div class="chart-count">${count}</div>
-    </div>
-  `).join('');
+    </div>`).join('');
 
+  // ── Курсы по менеджерам ──
+  const mgrCourseRows = (data.managerStats||[]).map(m => {
+    const top = Object.entries(m.courses||{}).sort((a,b)=>b[1].total-a[1].total).slice(0,3);
+    if (!top.length) return `<tr><td style="font-weight:600;padding:8px 12px">${m.name}</td><td colspan="3" style="color:var(--l4);font-size:12px;padding:8px 12px">Нет данных</td></tr>`;
+    return top.map(([ cName, cData ], i) => `
+      <tr>
+        ${i===0 ? `<td rowspan="${top.length}" style="font-weight:600;color:var(--l1);padding:8px 12px;vertical-align:top">${m.name}</td>` : ''}
+        <td style="padding:6px 12px;font-size:13px">${cName}</td>
+        <td style="padding:6px 12px;text-align:center"><span style="color:var(--blue);font-weight:700">${cData.total}</span></td>
+        <td style="padding:6px 12px;font-size:12px;color:var(--l3)">🇷🇺${cData['рус']} / 🇺🇿${cData['узб']}</td>
+      </tr>`).join('');
+  }).join('');
+
+  // ── Язык ──
   const langStats = data.langStats || {};
   const totalLang = (langStats['рус']||0) + (langStats['узб']||0) || 1;
-  const rusPct = Math.round((langStats['рус']||0)/totalLang*100);
-  const uzbPct = 100 - rusPct;
+  const rusPct    = Math.round((langStats['рус']||0)/totalLang*100);
+  const uzbPct    = 100 - rusPct;
 
   el.innerHTML = `
     <div class="page-header">
-      <div>
-        <div class="page-title">Обзор отдела</div>
-        <div class="page-sub">${STATE.month}</div>
-      </div>
+      <div><div class="page-title">Обзор отдела</div><div class="page-sub">${STATE.month}</div></div>
     </div>
 
     <div class="grid-4">
@@ -1589,45 +1819,19 @@ async function renderAdminOverview() {
       </div>
     </div>
 
-    <div class="manager-grid">
-      ${(data.managerStats||[]).map(m => {
-        const mPct = Math.min(100, Math.round(m.sales/(m.plan||40)*100));
-        return `
-        <div class="manager-card">
-          <div class="manager-card-top">
-            <div class="manager-av-lg">${m.name[0]}</div>
-            <div>
-              <div class="manager-name">${m.name}</div>
-              <div class="manager-role">Уровень ${m.level} · ${fmtPct(m.rate)}</div>
-            </div>
-          </div>
-          <div class="manager-stats-row">
-            <div class="mgr-stat">
-              <div class="mgr-stat-val" style="color:var(--blue)">${m.sales}</div>
-              <div class="mgr-stat-lbl">продаж</div>
-            </div>
-            <div class="mgr-stat">
-              <div class="mgr-stat-val" style="color:var(--l3)">${m.plan}</div>
-              <div class="mgr-stat-lbl">план</div>
-            </div>
-            <div class="mgr-stat">
-              <div class="mgr-stat-val" style="color:var(--green)">${fmt(m.commission)}</div>
-              <div class="mgr-stat-lbl">комиссия</div>
-            </div>
-          </div>
-          <div style="margin-top:14px">
-            <div class="progress-bar-bg" style="height:6px">
-              <div class="progress-bar-fill ${mPct>=100?'green':mPct>=75?'yellow':''}" style="width:${mPct}%"></div>
-            </div>
-            <div style="font-size:11px;color:var(--l3);margin-top:4px">${mPct}% плана</div>
-          </div>
-        </div>`;
-      }).join('')}
+    <div class="grid-2" style="margin-bottom:20px">
+      <div class="stat-card">
+        <div class="stat-label" style="margin-bottom:14px">📅 Продажи по неделям</div>
+        <div class="week-chart">${weekBars || '<div style="color:var(--l4);font-size:13px">Нет данных</div>'}</div>
+      </div>
+      ${paceHtml || '<div></div>'}
     </div>
 
-    <div class="grid-2">
+    <div class="manager-grid">${mgrCards}</div>
+
+    <div class="grid-2" style="margin-bottom:20px">
       <div class="stat-card">
-        <div class="stat-label" style="margin-bottom:16px">📚 Топ курсов</div>
+        <div class="stat-label" style="margin-bottom:16px">📚 Топ курсов (отдел)</div>
         <div class="chart-bar-wrap">${courseChart || '<div style="color:var(--l3);font-size:13px">Нет данных</div>'}</div>
       </div>
       <div class="stat-card">
@@ -1647,7 +1851,69 @@ async function renderAdminOverview() {
         </div>
       </div>
     </div>
-  `;
+
+    <div class="stat-card" style="margin-bottom:20px">
+      <div class="stat-label" style="margin-bottom:16px">🏆 Курсы по менеджерам</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead><tr style="border-bottom:1px solid var(--sep)">
+            <th style="padding:8px 12px;text-align:left;color:var(--l3);font-size:11px;text-transform:uppercase">Менеджер</th>
+            <th style="padding:8px 12px;text-align:left;color:var(--l3);font-size:11px;text-transform:uppercase">Курс</th>
+            <th style="padding:8px 12px;text-align:center;color:var(--l3);font-size:11px;text-transform:uppercase">Кол-во</th>
+            <th style="padding:8px 12px;text-align:left;color:var(--l3);font-size:11px;text-transform:uppercase">Язык</th>
+          </tr></thead>
+          <tbody>${mgrCourseRows || '<tr><td colspan="4" style="padding:16px;text-align:center;color:var(--l4)">Нет данных</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="stat-card" id="trend-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div class="stat-label">📊 Динамика продаж</div>
+        <div class="trend-period-bar">
+          <button class="trend-period-btn active" onclick="loadTrend('quarter',this)">Квартал</button>
+          <button class="trend-period-btn" onclick="loadTrend('semester',this)">Полугодие</button>
+          <button class="trend-period-btn" onclick="loadTrend('year',this)">С начала года</button>
+        </div>
+      </div>
+      <div id="trend-chart"><div style="color:var(--l4);font-size:13px">Загрузка...</div></div>
+    </div>`;
+
+  loadTrend('quarter', document.querySelector('.trend-period-btn.active'));
+}
+
+async function loadTrend(period, btn) {
+  document.querySelectorAll('.trend-period-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const months = getMonthsForPeriod(period);
+  const res    = await api('getTrend', { months });
+  const trend  = res.trend || [];
+  const maxSales = Math.max(1, ...trend.map(t => t.sales));
+  const SHORT_MON = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+
+  const bars = trend.map((t, i) => {
+    const h   = Math.max(4, Math.round(t.sales / maxSales * 100));
+    const prev = trend[i-1];
+    let deltaHtml = '';
+    if (prev && prev.sales > 0) {
+      const delta = Math.round((t.sales - prev.sales) / prev.sales * 100);
+      const cls   = delta >= 0 ? 'up' : 'down';
+      const sign  = delta >= 0 ? '+' : '';
+      deltaHtml = `<div class="trend-delta ${cls}">${sign}${delta}%</div>`;
+    }
+    const mParts = t.month.split(' ');
+    const mIdx   = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'].indexOf(mParts[0]);
+    const label  = mIdx >= 0 ? SHORT_MON[mIdx] : mParts[0];
+    return `<div class="trend-col">
+      ${deltaHtml}
+      <div class="trend-count">${t.sales}</div>
+      <div class="trend-bar-wrap"><div class="trend-bar" style="height:${h}px"></div></div>
+      <div class="trend-month">${label}<br>${mParts[1]}</div>
+    </div>`;
+  }).join('');
+
+  const chart = document.getElementById('trend-chart');
+  if (chart) chart.innerHTML = `<div class="trend-bars">${bars || '<div style="color:var(--l4)">Нет данных</div>'}</div>`;
 }
 
 // ── ADMIN REGISTRY ──
@@ -1722,7 +1988,7 @@ function renderSalesTableAdmin(sales) {
       <td>${fmt(s.monthContract)}</td>
       <td><span class="badge ${s.fullPayment==='Да'?'badge-green':'badge-yellow'}">${s.fullPayment==='Да'?'✅ 100%':'⏳ Частично'}</span></td>
       <td>
-        ${s.contractLink?`<a href="${s.contractLink}" target="_blank" class="link-icon">📄</a>`:'<span style="color:var(--l4);font-size:12px">Нет</span>'}
+        ${s.contractLink?`<span style="font-size:12px;font-weight:600;color:var(--l2)">№${s.contractLink}</span>`:'<span style="color:var(--l4);font-size:12px">—</span>'}
         ${s.paymentLink ?`<a href="${s.paymentLink}"  target="_blank" class="link-icon">💳</a>`:''}
       </td>
       <td style="color:var(--l3);font-size:12px">${s.date||'—'}</td>
@@ -1775,8 +2041,8 @@ async function renderAdminManagers() {
         </div>
       </div>
       <div class="field" style="margin-bottom:10px">
-        <label>План на ${STATE.month}</label>
-        <input type="number" id="plan-${m.rowIndex}" placeholder="40"
+        <label>План (продаж в месяц)</label>
+        <input type="number" id="plan-${m.rowIndex}" value="${m.plan || 40}" placeholder="40"
           style="${inpStyle}"
           onfocus="this.style.borderColor='var(--blue)'"
           onblur="this.style.borderColor='transparent'">
@@ -1801,7 +2067,7 @@ async function renderAdminManagers() {
 async function savePlan(rowIndex, name) {
   const val = document.getElementById(`plan-${rowIndex}`)?.value;
   if (!val) { toast('Введите план', 'warning'); return; }
-  const res = await api('setManagerPlan', { manager: name, month: STATE.month, plan: Number(val) });
+  const res = await api('setManagerPlan', { manager: name, plan: Number(val) });
   if (res.success) toast(`✅ План для ${name} сохранён: ${val} продаж`);
   else toast(res.error||'Ошибка', 'error');
 }
