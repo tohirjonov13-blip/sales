@@ -967,7 +967,7 @@ input[type=file] { display: none; }
 </div>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw4TdOB7LRQimjrnra7OmsiTZw9X-5bXZamcDXSrMAoRlCi5vVEnhjU6E-BfXg50Amk0g/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw28FG5IVKb5Cr-vyqBt7a3hTFtEkgxfS3650OwYH1GUWF6fzHnQTXslBLSgs2UYo2vxA/exec';
 
 let STATE = {
   user: null,
@@ -1477,6 +1477,7 @@ function renderSalesTable(sales, showManager=true) {
         ${s.paymentLink  ? `<a href="${s.paymentLink}"  target="_blank" class="link-icon" title="Платёж">💳</a>` : ''}
       </td>
       <td style="color:var(--l3);font-size:12px">${s.date||'—'}</td>
+      <td><span class="badge badge-blue" style="background:var(--fill);color:var(--l2)">${s.source||'—'}</span></td>
     </tr>
   `).join('');
 
@@ -1489,7 +1490,7 @@ function renderSalesTable(sales, showManager=true) {
             ${showManager?'<th>Менеджер</th>':''}
             <th>Группа</th><th>Курс</th><th>Язык</th>
             <th>Оплата</th><th>Договор</th><th>Статус</th>
-            <th>Файлы</th><th>Дата</th>
+            <th>Файлы</th><th>Дата</th><th>Источник</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -1514,12 +1515,24 @@ async function openAddSaleModal() {
           <select id="ns-course"><option value="">Выберите курс</option>${courseOptions}</select>
         </div>
       </div>
-      <div class="field"><label>Язык курса *</label>
-        <select id="ns-lang">
-          <option value="">Выберите язык</option>
-          <option value="Рус">🇷🇺 Русский</option>
-          <option value="Узб">🇺🇿 Узбекский</option>
-        </select>
+      <div class="form-row">
+        <div class="field"><label>Язык курса *</label>
+          <select id="ns-lang">
+            <option value="">Выберите язык</option>
+            <option value="Рус">🇷🇺 Русский</option>
+            <option value="Узб">🇺🇿 Узбекский</option>
+          </select>
+        </div>
+        <div class="field"><label>Источник *</label>
+          <select id="ns-source">
+            <option value="">Выберите источник</option>
+            <option value="Телефон">📞 Телефон</option>
+            <option value="Инстаграм">📸 Инстаграм</option>
+            <option value="Сайт">🌐 Сайт</option>
+            <option value="Телеграм">✈️ Телеграм</option>
+            <option value="Фейсбук">👥 Фейсбук</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -1578,12 +1591,13 @@ async function submitSale() {
   const group = document.getElementById('ns-group')?.value.trim();
   const course = document.getElementById('ns-course')?.value;
   const lang = document.getElementById('ns-lang')?.value;
+  const source = document.getElementById('ns-source')?.value;
   const payment = document.getElementById('ns-payment')?.value;
   const total = document.getElementById('ns-total')?.value;
   const contractLink = document.getElementById('ns-contract-link')?.value.trim();
   const paymentLink = document.getElementById('ns-payment-link')?.value.trim();
 
-  if (!name || !group || !course || !lang || !payment || !total) {
+  if (!name || !group || !course || !lang || !source || !payment || !total) {
     toast('Заполните все обязательные поля', 'error'); return;
   }
   if (!contractLink) {
@@ -1601,7 +1615,7 @@ async function submitSale() {
   const res = await api('addSale', {
     month: STATE.month,
     sale: {
-      name, group, course, language: lang,
+      name, group, course, language: lang, source,
       payment: Number(payment),
       totalContract: Number(total),
       monthContract,
@@ -1772,6 +1786,18 @@ async function renderAdminOverview() {
       <div class="chart-count">${count}</div>
     </div>`).join('');
 
+  // ── Источники ──
+  const SOURCE_ICONS = { 'Телефон':'📞', 'Инстаграм':'📸', 'Сайт':'🌐', 'Телеграм':'✈️', 'Фейсбук':'👥' };
+  const sourceEntries = Object.entries(data.sourceStats||{}).sort((a,b)=>b[1]-a[1]);
+  const maxSource     = sourceEntries[0]?.[1] || 1;
+  const totalSource   = sourceEntries.reduce((s,[,c])=>s+c,0) || 1;
+  const sourceChart   = sourceEntries.map(([name,count]) => `
+    <div class="chart-row">
+      <div class="chart-label">${(SOURCE_ICONS[name]||'') + ' ' + name}</div>
+      <div class="chart-track"><div class="chart-fill" style="width:${Math.round(count/maxSource*100)}%"></div></div>
+      <div class="chart-count">${count} <span style="color:var(--l4);font-size:11px">${Math.round(count/totalSource*100)}%</span></div>
+    </div>`).join('');
+
   // ── Курсы по менеджерам ──
   const mgrCourseRows = (data.managerStats||[]).map(m => {
     const top = Object.entries(m.courses||{}).sort((a,b)=>b[1].total-a[1].total).slice(0,3);
@@ -1850,6 +1876,11 @@ async function renderAdminOverview() {
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="stat-card" style="margin-bottom:20px">
+      <div class="stat-label" style="margin-bottom:16px">📡 Источники сделок</div>
+      <div class="chart-bar-wrap">${sourceChart || '<div style="color:var(--l3);font-size:13px">Нет данных</div>'}</div>
     </div>
 
     <div class="stat-card" style="margin-bottom:20px">
@@ -1992,6 +2023,7 @@ function renderSalesTableAdmin(sales) {
         ${s.paymentLink ?`<a href="${s.paymentLink}"  target="_blank" class="link-icon">💳</a>`:''}
       </td>
       <td style="color:var(--l3);font-size:12px">${s.date||'—'}</td>
+      <td><span class="badge badge-blue" style="background:var(--fill);color:var(--l2)">${s.source||'—'}</span></td>
       ${canDelete?`<td><button class="btn btn-danger btn-sm" onclick="deleteSale(${s.rowIndex})">✕</button></td>`:'<td></td>'}
     </tr>
   `).join('');
@@ -2003,7 +2035,7 @@ function renderSalesTableAdmin(sales) {
           <tr>
             <th>№</th><th>Ф.И.О.</th><th>Менеджер</th><th>Группа</th>
             <th>Курс</th><th>Язык</th><th>Оплата</th><th>Договор</th>
-            <th>1й мес</th><th>Статус</th><th>Файлы</th><th>Дата</th>
+            <th>1й мес</th><th>Статус</th><th>Файлы</th><th>Дата</th><th>Источник</th>
             ${canDelete?'<th></th>':''}
           </tr>
         </thead>
