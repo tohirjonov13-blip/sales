@@ -239,7 +239,7 @@ body {
 .main {
   max-width: 1320px;
   margin: 0 auto;
-  padding: var(--sp-7) var(--sp-7);
+  padding: var(--sp-7) var(--sp-7) calc(var(--sp-8) * 2);
 }
 
 .page-head {
@@ -1707,16 +1707,66 @@ tbody tr:hover { background: var(--surface-2); }
 .modal-body { padding: 0; }
 
 /* === Trend chart === */
-.trend-period-bar { display: inline-flex; gap: 4px; background: var(--surface-3); border-radius: var(--r-md); padding: 4px; margin-bottom: var(--sp-4); }
-.trend-period-btn { background: transparent; border: 0; padding: 8px 14px; font-family: var(--font-sans); font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-radius: var(--r-sm); transition: all 0.15s; }
+.trend-period-bar { display: inline-flex; gap: 2px; background: var(--surface-3); border-radius: var(--r-md); padding: 3px; }
+.trend-period-btn { background: transparent; border: 0; padding: 6px 12px; font-family: var(--font-sans); font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; border-radius: var(--r-sm); transition: all 0.15s; white-space: nowrap; }
 .trend-period-btn.active { background: var(--surface); color: var(--ink); box-shadow: var(--sh-sm); }
-.trend-bars { display: flex; align-items: flex-end; gap: var(--sp-2); height: 140px; padding: var(--sp-3) 0; }
-.trend-col { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; min-width: 32px; }
-.trend-bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; }
-.trend-bar { width: 100%; background: linear-gradient(180deg, var(--blue), var(--indigo)); border-radius: var(--r-xs) var(--r-xs) 0 0; min-height: 4px; transition: height 0.6s ease; }
-.trend-month { font-size: 11px; color: var(--muted); text-align: center; white-space: nowrap; font-weight: 600; }
-.trend-count { font-size: 12px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
-.trend-delta { font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: var(--r-full); }
+
+.trend-canvas {
+  position: relative;
+  height: 200px;
+  margin-top: var(--sp-2);
+  padding: var(--sp-5) 0 0;
+  background-image: linear-gradient(to top, var(--line-soft) 1px, transparent 1px);
+  background-size: 100% 25%;
+  background-position: 0 100%;
+  background-repeat: repeat-y;
+}
+.trend-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: var(--sp-3);
+  height: 100%;
+}
+.trend-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  max-width: 80px;
+  height: 100%;
+  position: relative;
+}
+.trend-col-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 6px;
+  min-height: 36px;
+  justify-content: flex-end;
+}
+.trend-bar-wrap {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.trend-bar {
+  width: 100%;
+  max-width: 56px;
+  background: linear-gradient(180deg, var(--blue) 0%, var(--indigo) 100%);
+  border-radius: var(--r-sm) var(--r-sm) 0 0;
+  min-height: 3px;
+  transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 -1px 8px rgba(0, 102, 255, 0.25);
+}
+.trend-bar.current { background: linear-gradient(180deg, var(--orange) 0%, #E55A00 100%); box-shadow: 0 -1px 10px rgba(255, 107, 0, 0.35); }
+.trend-month { font-size: 11px; color: var(--muted); text-align: center; white-space: nowrap; font-weight: 600; margin-top: 8px; line-height: 1.3; }
+.trend-month strong { display: block; color: var(--ink); font-size: 12px; font-weight: 700; text-transform: lowercase; }
+.trend-count { font-size: 14px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.trend-delta { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: var(--r-full); line-height: 1.4; }
 .trend-delta.up { background: var(--green-bg); color: var(--green-deep); }
 .trend-delta.down { background: var(--red-bg); color: var(--red-deep); }
 
@@ -2906,13 +2956,15 @@ async function renderAdminOverview() {
     // Trend section
     const trendPanel =
       '<div class="panel" id="trend-section">' +
-        '<div class="panel-title">📊 Динамика продаж</div>' +
-        '<div class="trend-period-bar" style="margin-bottom:var(--sp-3)">' +
-          '<button class="trend-period-btn active" onclick="loadTrend(\'quarter\',this)">Квартал</button>' +
-          '<button class="trend-period-btn" onclick="loadTrend(\'semester\',this)">Полугодие</button>' +
-          '<button class="trend-period-btn" onclick="loadTrend(\'year\',this)">С нач. года</button>' +
+        '<div class="panel-title" style="margin-bottom:var(--sp-3)">' +
+          '<span>📊 Динамика продаж</span>' +
+          '<div class="trend-period-bar" style="margin-left:auto">' +
+            '<button class="trend-period-btn active" onclick="loadTrend(\'quarter\',this)">Квартал</button>' +
+            '<button class="trend-period-btn" onclick="loadTrend(\'semester\',this)">Полугодие</button>' +
+            '<button class="trend-period-btn" onclick="loadTrend(\'year\',this)">С нач. года</button>' +
+          '</div>' +
         '</div>' +
-        '<div id="trend-chart"><div style="color:var(--muted);font-size:13px">Загрузка...</div></div>' +
+        '<div id="trend-chart"><div style="color:var(--muted);font-size:13px;padding:var(--sp-5) 0">Загрузка...</div></div>' +
       '</div>';
 
     el.innerHTML =
@@ -2952,7 +3004,7 @@ async function loadTrend(period, btn) {
   const SHORT_MON = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
 
   const bars = trend.map((t, i) => {
-    const h   = Math.max(4, Math.round(t.sales / maxSales * 100));
+    const h   = Math.max(2, Math.round(t.sales / maxSales * 100));
     const prev = trend[i-1];
     let deltaHtml = '';
     if (prev && prev.sales > 0) {
@@ -2964,16 +3016,21 @@ async function loadTrend(period, btn) {
     const mParts = t.month.split(' ');
     const mIdx   = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'].indexOf(mParts[0]);
     const label  = mIdx >= 0 ? SHORT_MON[mIdx] : mParts[0];
+    const isCurrent = t.month === STATE.month;
     return `<div class="trend-col">
-      ${deltaHtml}
-      <div class="trend-count">${t.sales}</div>
-      <div class="trend-bar-wrap"><div class="trend-bar" style="height:${h}px"></div></div>
-      <div class="trend-month">${label}<br>${mParts[1]}</div>
+      <div class="trend-col-header">
+        ${deltaHtml}
+        <div class="trend-count">${t.sales}</div>
+      </div>
+      <div class="trend-bar-wrap"><div class="trend-bar ${isCurrent ? 'current' : ''}" style="height:${h}%"></div></div>
+      <div class="trend-month"><strong>${label}</strong>${mParts[1]}</div>
     </div>`;
   }).join('');
 
   const chart = document.getElementById('trend-chart');
-  if (chart) chart.innerHTML = `<div class="trend-bars">${bars || '<div style="color:var(--muted-2)">Нет данных</div>'}</div>`;
+  if (chart) chart.innerHTML = bars
+    ? `<div class="trend-canvas"><div class="trend-bars">${bars}</div></div>`
+    : '<div style="color:var(--muted);padding:var(--sp-5) 0">Нет данных</div>';
 }
 
 // ── ADMIN REGISTRY ──
