@@ -384,6 +384,7 @@ body {
   letter-spacing: 0;
 }
 .stat.featured .stat-value sup { color: rgba(255,255,255,0.5); }
+.stat-value.sum { font-size: 26px; letter-spacing: -0.02em; }
 
 .stat-sub {
   margin-top: var(--sp-3);
@@ -1737,6 +1738,55 @@ tbody tr:hover { background: var(--surface-2); }
 .table-header { display: flex; align-items: center; justify-content: space-between; padding: var(--sp-4) var(--sp-5); border-bottom: 1px solid var(--line); }
 .table-title { font-family: var(--font-sans); font-size: 16px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); }
 .btn-xs { padding: 6px 12px; font-size: 11px; }
+
+/* === Admin overview compact + sources === */
+.overview-narrow { max-width: 1100px; margin: 0 auto; }
+.overview-2col { display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--sp-4); margin-top: var(--sp-5); }
+@media(max-width:1000px){ .overview-2col { grid-template-columns: 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: var(--sp-5); }
+.panel-title { font-family: var(--font-sans); font-size: 14px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; margin-bottom: var(--sp-4); display: flex; align-items: center; gap: 6px; }
+.panel-title small { color: var(--muted); font-weight: 500; margin-left: auto; }
+.source-row { display: grid; grid-template-columns: 22px 1fr 60px 40px; align-items: center; gap: var(--sp-3); padding: 8px 0; font-size: 13px; }
+.source-row + .source-row { border-top: 1px solid var(--line-soft); }
+.source-icon { font-size: 16px; line-height: 1; }
+.source-name { color: var(--ink); font-weight: 600; }
+.source-bar-wrap { grid-column: 1 / 5; height: 4px; background: var(--surface-3); border-radius: var(--r-full); overflow: hidden; margin-top: 4px; }
+.source-bar-fill { height: 100%; border-radius: var(--r-full); }
+.source-bar-fill.blue { background: linear-gradient(90deg, var(--blue), var(--indigo)); }
+.source-bar-fill.pink { background: linear-gradient(90deg, var(--pink), #F472B6); }
+.source-bar-fill.teal { background: linear-gradient(90deg, var(--teal), #2DD4BF); }
+.source-bar-fill.orange { background: linear-gradient(90deg, var(--orange), #FF9444); }
+.source-bar-fill.purple { background: linear-gradient(90deg, var(--purple), #A78BFA); }
+.source-bar-fill.green { background: linear-gradient(90deg, var(--green), #34D399); }
+.source-count { text-align: right; font-family: var(--font-sans); font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.source-pct { text-align: right; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+
+/* === Manager card compact === */
+.mgr-grid.compact { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: var(--sp-3); }
+.mgr-card.compact { padding: var(--sp-4); gap: var(--sp-3); }
+.mgr-card.compact .mgr-avatar { width: 40px; height: 40px; font-size: 16px; }
+.mgr-card.compact .mgr-name { font-size: 16px; }
+.mgr-card.compact .mgr-level { font-size: 11px; }
+.mgr-card.compact .mgr-stats { padding: var(--sp-3); gap: 4px; }
+.mgr-card.compact .mgr-stat-val { font-size: 18px; }
+.mgr-card.compact .mgr-stat-lab { font-size: 9px; margin-top: 4px; }
+.mgr-card.compact .mgr-earnings { padding: var(--sp-2) var(--sp-3); font-size: 10px; line-height: 1.4; gap: 6px; flex-wrap: wrap; }
+.mgr-card.compact .mgr-earnings strong { font-size: 11px; font-variant-numeric: tabular-nums; }
+
+/* === Compact stat grid === */
+.stat-grid.compact { gap: var(--sp-3); }
+.stat-grid.compact .stat { padding: var(--sp-4); }
+.stat-grid.compact .stat-icon { width: 36px; height: 36px; font-size: 16px; margin-bottom: var(--sp-3); }
+.stat-grid.compact .stat-value { font-size: 28px; font-variant-numeric: tabular-nums; }
+.stat-grid.compact .stat-value.sum { font-size: 22px; }
+.stat-grid.compact .stat-label { font-size: 11px; }
+.stat-grid.compact .stat-sub { font-size: 11px; margin-top: 6px; }
+
+/* === Earnings number readable === */
+.earnings-total.sum { font-size: 56px; letter-spacing: -0.02em; }
+.earnings-total.sum sup { font-size: 14px; margin-left: 6px; }
+.earnings-break .sum-val { font-variant-numeric: tabular-nums; font-size: 14px !important; }
+.bonus-value.sum { font-size: 17px; font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
@@ -2144,7 +2194,7 @@ async function renderManagerDashboard() {
         '<div class="stat">' +
           '<div class="stat-icon blue">💰</div>' +
           '<div class="stat-label">Комиссия</div>' +
-          '<div class="stat-value">' + fmtM(data.commission) + '<sup>млн</sup></div>' +
+          '<div class="stat-value sum">' + fmtSum(data.commission) + '</div>' +
           '<div class="stat-sub">Ставка ' + fmtPct(data.commissionRate) + ' от выручки</div>' +
         '</div>' +
         '<div class="stat">' +
@@ -2156,7 +2206,7 @@ async function renderManagerDashboard() {
         '<div class="stat">' +
           '<div class="stat-icon teal">📈</div>' +
           '<div class="stat-label">Выручка месяца</div>' +
-          '<div class="stat-value">' + fmtM(data.totalRevenue) + '<sup>млн</sup></div>' +
+          '<div class="stat-value sum">' + fmtSum(data.totalRevenue) + '</div>' +
           '<div class="stat-sub">сум</div>' +
         '</div>' +
       '</div>' +
@@ -2177,7 +2227,7 @@ async function renderManagerDashboard() {
             '</div>' +
             '<div class="level-meta-item accent">' +
               '<span>Премия уровня</span>' +
-              '<strong>' + fmtM(data.premiumBonus) + 'M</strong>' +
+              '<strong style="font-size:13px;font-variant-numeric:tabular-nums">' + fmtSum(data.premiumBonus) + '</strong>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -2193,11 +2243,11 @@ async function renderManagerDashboard() {
           '<div class="bonus-grid">' +
             '<div class="bonus orange">' +
               '<div class="bonus-label">Бонус 100%</div>' +
-              '<div class="bonus-value">' + fmtM(data.bonusAmount || data.nextBonusAmount) + 'M</div>' +
+              '<div class="bonus-value sum">' + fmtSum(data.bonusAmount || data.nextBonusAmount) + '</div>' +
             '</div>' +
             '<div class="bonus purple">' +
               '<div class="bonus-label">Премия уровня</div>' +
-              '<div class="bonus-value">' + fmtM(data.premiumBonus) + 'M</div>' +
+              '<div class="bonus-value sum">' + fmtSum(data.premiumBonus) + '</div>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -2206,12 +2256,12 @@ async function renderManagerDashboard() {
       '<div class="earnings">' +
         '<div class="earnings-content">' +
           '<div class="earnings-label">Итого к выплате · ' + STATE.month + '</div>' +
-          '<div class="earnings-total">' + fmtM(data.totalEarnings) + '<sup>млн сум</sup></div>' +
+          '<div class="earnings-total sum">' + fmtSum(data.totalEarnings) + '<sup>сум</sup></div>' +
           '<div class="earnings-break">' +
-            '<div>Оклад<strong>' + fmtM(data.salary) + 'M</strong></div>' +
-            '<div>Комиссия<strong>' + fmtM(data.commission) + 'M</strong></div>' +
-            '<div>Бонус 100%<strong>' + fmtM(data.bonusAmount) + 'M</strong></div>' +
-            '<div>Премия<strong>' + fmtM(data.premiumBonus) + 'M</strong></div>' +
+            '<div>Оклад<strong class="sum-val">' + fmtSum(data.salary) + '</strong></div>' +
+            '<div>Комиссия<strong class="sum-val">' + fmtSum(data.commission) + '</strong></div>' +
+            '<div>Бонус 100%<strong class="sum-val">' + fmtSum(data.bonusAmount) + '</strong></div>' +
+            '<div>Премия<strong class="sum-val">' + fmtSum(data.premiumBonus) + '</strong></div>' +
           '</div>' +
         '</div>' +
         '<div class="earnings-actions">' +
@@ -2226,6 +2276,7 @@ async function renderManagerDashboard() {
   }
 }
 
+function fmtSum(n) { return new Intl.NumberFormat('ru-RU').format(Math.round(Number(n) || 0)); }
 function fmtM(n) { return ((Number(n) || 0) / 1000000).toFixed(2); }
 
 function getLevelName(n) {
@@ -2744,9 +2795,9 @@ async function renderAdminOverview() {
     const totalPlan = (data.managerStats || []).reduce((s, m) => s + (m.plan || 40), 0);
     const planPct = totalPlan ? Math.round(data.totalSales / totalPlan * 100) : 0;
 
-    // KPI strip
+    // KPI strip (compact, full numbers)
     const statHtml =
-      '<div class="stat-grid">' +
+      '<div class="stat-grid compact">' +
         '<div class="stat featured">' +
           '<div class="stat-icon">🎯</div>' +
           '<div class="stat-label">Всего продаж</div>' +
@@ -2756,13 +2807,13 @@ async function renderAdminOverview() {
         '<div class="stat">' +
           '<div class="stat-icon blue">📈</div>' +
           '<div class="stat-label">Выручка месяца</div>' +
-          '<div class="stat-value">' + fmtM(data.totalRevenue) + '<sup>млн</sup></div>' +
+          '<div class="stat-value sum">' + fmtSum(data.totalRevenue) + '</div>' +
           '<div class="stat-sub">сум</div>' +
         '</div>' +
         '<div class="stat">' +
           '<div class="stat-icon orange">💳</div>' +
           '<div class="stat-label">Оплаты клиентов</div>' +
-          '<div class="stat-value">' + fmtM(data.totalPayment) + '<sup>млн</sup></div>' +
+          '<div class="stat-value sum">' + fmtSum(data.totalPayment) + '</div>' +
           '<div class="stat-sub">сум</div>' +
         '</div>' +
         '<div class="stat">' +
@@ -2773,7 +2824,7 @@ async function renderAdminOverview() {
         '</div>' +
       '</div>';
 
-    // Manager cards
+    // Manager cards (compact + full numbers)
     const mgrCards = (data.managerStats || []).map((m, i) => {
       const colorCls = mgrColorClass(i);
       const mPct = Math.min(999, Math.round(m.sales / (m.plan || 40) * 100));
@@ -2781,14 +2832,14 @@ async function renderAdminOverview() {
       const progWidth = Math.min(100, mPct);
       const earningsHtml = isView ? '' :
         '<div class="mgr-earnings">' +
-          '<span>Оклад<strong>' + fmtM(m.salary) + 'M</strong></span>' +
-          '<span>Комиссия<strong>' + fmtM(m.commission) + 'M</strong></span>' +
-          '<span>Бонус<strong>' + fmtM(m.kpiBonus) + 'M</strong></span>' +
-          '<span>Премия<strong>' + fmtM(m.premiumBonus) + 'M</strong></span>' +
-          '<span class="total">Итого<strong>' + fmtM(m.totalEarnings) + 'M</strong></span>' +
+          '<span>Оклад<strong>' + fmtSum(m.salary) + '</strong></span>' +
+          '<span>Комиссия<strong>' + fmtSum(m.commission) + '</strong></span>' +
+          '<span>Бонус<strong>' + fmtSum(m.kpiBonus) + '</strong></span>' +
+          '<span>Премия<strong>' + fmtSum(m.premiumBonus) + '</strong></span>' +
+          '<span class="total">Итого<strong>' + fmtSum(m.totalEarnings) + '</strong></span>' +
         '</div>';
       return (
-        '<div class="mgr-card">' +
+        '<div class="mgr-card compact">' +
           '<div class="mgr-head">' +
             '<div class="mgr-id">' +
               '<div class="mgr-avatar ' + colorCls + '">' + (m.name||'?')[0] + '</div>' +
@@ -2803,7 +2854,7 @@ async function renderAdminOverview() {
             '<div class="mgr-stat"><div class="mgr-stat-val">' + m.sales + '</div><div class="mgr-stat-lab">Продаж</div></div>' +
             '<div class="mgr-stat"><div class="mgr-stat-val">' + m.plan + '</div><div class="mgr-stat-lab">План</div></div>' +
             '<div class="mgr-stat accent"><div class="mgr-stat-val">' + m.fullPayments + '</div><div class="mgr-stat-lab">100%</div></div>' +
-            '<div class="mgr-stat"><div class="mgr-stat-val">' + fmtM(m.revenue) + '<small>М</small></div><div class="mgr-stat-lab">Выручка</div></div>' +
+            '<div class="mgr-stat"><div class="mgr-stat-val" style="font-size:14px;font-variant-numeric:tabular-nums">' + fmtSum(m.revenue) + '</div><div class="mgr-stat-lab">Выручка</div></div>' +
           '</div>' +
           '<div class="mgr-progress">' +
             '<div class="mgr-progress-bar"><div class="mgr-progress-fill ' + progCls + '" style="width:' + progWidth + '%"></div></div>' +
@@ -2814,35 +2865,76 @@ async function renderAdminOverview() {
       );
     }).join('');
 
-    // Trend section (preserved)
-    const trendHtml =
-      '<div class="sheet" style="padding:0" id="trend-section" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--sp-6);margin-top:var(--sp-6)">' +
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-4);flex-wrap:wrap;gap:10px">' +
-          '<div style="font-family:var(--font-sans);font-size:18px;font-weight:700;letter-spacing:-0.02em">📊 Динамика продаж</div>' +
-          '<div class="trend-period-bar">' +
-            '<button class="trend-period-btn active" onclick="loadTrend(\'quarter\',this)">Квартал</button>' +
-            '<button class="trend-period-btn" onclick="loadTrend(\'semester\',this)">Полугодие</button>' +
-            '<button class="trend-period-btn" onclick="loadTrend(\'year\',this)">С начала года</button>' +
-          '</div>' +
+    // Sources breakdown (restored from old UI)
+    const sourceStats = data.sourceStats || {};
+    const sourceEntries = Object.entries(sourceStats).filter(([k,v]) => v > 0).sort((a,b) => b[1] - a[1]);
+    const sourceTotal = sourceEntries.reduce((s, [_,v]) => s + v, 0);
+    const SOURCE_META = {
+      'Телефон':   { icon:'📞', cls:'blue'   },
+      'Инстаграм': { icon:'📸', cls:'pink'   },
+      'Instagram': { icon:'📸', cls:'pink'   },
+      'Сайт':      { icon:'🌐', cls:'teal'   },
+      'Telegram':  { icon:'✈️', cls:'blue'   },
+      'Телеграм':  { icon:'✈️', cls:'blue'   },
+      'Фейсбук':   { icon:'👥', cls:'purple' },
+      'Facebook':  { icon:'👥', cls:'purple' },
+      'Реферал':   { icon:'🤝', cls:'green'  },
+      'Другое':    { icon:'📌', cls:'orange' }
+    };
+    const sourcesHtml = sourceEntries.length === 0
+      ? '<div style="color:var(--muted);font-size:13px;padding:var(--sp-3) 0">Нет данных по источникам</div>'
+      : sourceEntries.map(([name, count]) => {
+          const meta = SOURCE_META[name] || { icon:'📌', cls:'orange' };
+          const pct = sourceTotal ? Math.round(count / sourceTotal * 100) : 0;
+          return (
+            '<div class="source-row">' +
+              '<div class="source-icon">' + meta.icon + '</div>' +
+              '<div class="source-name">' + name + '</div>' +
+              '<div class="source-count">' + count + '</div>' +
+              '<div class="source-pct">' + pct + '%</div>' +
+              '<div class="source-bar-wrap"><div class="source-bar-fill ' + meta.cls + '" style="width:' + pct + '%"></div></div>' +
+            '</div>'
+          );
+        }).join('');
+
+    const sourcesPanel =
+      '<div class="panel">' +
+        '<div class="panel-title">📡 Источники сделок <small>' + sourceTotal + ' активных</small></div>' +
+        sourcesHtml +
+      '</div>';
+
+    // Trend section
+    const trendPanel =
+      '<div class="panel" id="trend-section">' +
+        '<div class="panel-title">📊 Динамика продаж</div>' +
+        '<div class="trend-period-bar" style="margin-bottom:var(--sp-3)">' +
+          '<button class="trend-period-btn active" onclick="loadTrend(\'quarter\',this)">Квартал</button>' +
+          '<button class="trend-period-btn" onclick="loadTrend(\'semester\',this)">Полугодие</button>' +
+          '<button class="trend-period-btn" onclick="loadTrend(\'year\',this)">С нач. года</button>' +
         '</div>' +
         '<div id="trend-chart"><div style="color:var(--muted);font-size:13px">Загрузка...</div></div>' +
       '</div>';
 
     el.innerHTML =
-      '<div class="page-head">' +
-        '<div>' +
-          '<h1 class="page-title">Обзор</h1>' +
-          '<div class="page-title-sub">' + STATE.month + '</div>' +
+      '<div class="overview-narrow">' +
+        '<div class="page-head">' +
+          '<div>' +
+            '<h1 class="page-title">Обзор</h1>' +
+            '<div class="page-title-sub">' + STATE.month + '</div>' +
+          '</div>' +
+          '<div class="page-meta">' +
+            '<div class="meta-chip"><span class="dot"></span>Месяц открыт</div>' +
+            '<div class="meta-chip"><span>Драфтов</span>' + (data.draftCount || 0) + '</div>' +
+            '<div class="meta-chip"><span>Отменено</span>' + (data.cancelCount || 0) + '</div>' +
+          '</div>' +
         '</div>' +
-        '<div class="page-meta">' +
-          '<div class="meta-chip"><span class="dot"></span>Месяц открыт</div>' +
-          '<div class="meta-chip"><span>Драфтов</span>' + (data.draftCount || 0) + '</div>' +
-          '<div class="meta-chip"><span>Отменено</span>' + (data.cancelCount || 0) + '</div>' +
+        statHtml +
+        '<div class="mgr-grid compact" style="margin-top:var(--sp-4)">' + mgrCards + '</div>' +
+        '<div class="overview-2col">' +
+          trendPanel +
+          sourcesPanel +
         '</div>' +
-      '</div>' +
-      statHtml +
-      '<div class="mgr-grid">' + mgrCards + '</div>' +
-      trendHtml;
+      '</div>';
 
     loadTrend('quarter', document.querySelector('.trend-period-btn.active'));
   } catch (err) {
@@ -3015,12 +3107,12 @@ function calcRecalc() {
   const salary = STATE.user.salary || 0;
   const total = salary + commission + bonus + premium;
 
-  document.getElementById('calc-total').innerHTML = (total / 1000000).toFixed(2) + '<sup>млн</sup>';
+  document.getElementById('calc-total').innerHTML = fmtSum(total) + '<sup>сум</sup>';
   document.getElementById('calc-break').innerHTML =
     '<div>Уровень<strong>' + (level ? level.min + '–' + level.max : '—') + '</strong></div>' +
-    '<div>Комиссия<strong>' + (commission/1000000).toFixed(2) + 'M</strong></div>' +
-    '<div>Бонус 100%<strong>' + (bonus/1000000).toFixed(2) + 'M</strong></div>' +
-    '<div>Премия<strong>' + (premium/1000000).toFixed(2) + 'M</strong></div>';
+    '<div>Комиссия<strong>' + fmtSum(commission) + '</strong></div>' +
+    '<div>Бонус 100%<strong>' + fmtSum(bonus) + '</strong></div>' +
+    '<div>Премия<strong>' + fmtSum(premium) + '</strong></div>';
 }
 
 async function saveGoalsHandler() {
