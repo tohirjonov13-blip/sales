@@ -1776,6 +1776,10 @@ tbody tr:hover { background: var(--surface-2); }
 .mkt-table td { padding: 10px 12px; border-bottom: 1px solid var(--line-soft); }
 .mkt-table input[type=number] { width: 72px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 6px 10px; font-family: var(--font-sans); font-size: 13px; color: var(--ink); outline: none; text-align: center; font-weight: 600; }
 .mkt-table input[type=number]:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-bg); }
+.mkt-table .mkt-total { font-family: var(--font-sans); font-weight: 700; color: var(--ink); text-align: center; font-variant-numeric: tabular-nums; background: var(--surface-2); }
+.mkt-table tfoot td { background: var(--ink); color: #fff; padding: 12px; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.04em; border-top: 2px solid var(--ink); border-bottom: none; }
+.mkt-table tfoot td.mkt-total { background: var(--ink); color: #fff; font-size: 14px; text-transform: none; letter-spacing: 0; }
+.mkt-table tfoot td.mkt-grand { background: var(--orange); color: #fff; font-size: 15px; }
 
 /* === Plan input field === */
 .plan-input { width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--ink); outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
@@ -1837,6 +1841,30 @@ tbody tr:hover { background: var(--surface-2); }
 .earnings-total.sum sup { font-size: 14px; margin-left: 6px; }
 .earnings-break .sum-val { font-variant-numeric: tabular-nums; font-size: 14px !important; }
 .bonus-value.sum { font-size: 17px; font-variant-numeric: tabular-nums; }
+
+/* === Leads & conversion panel === */
+.lead-row { display: grid; grid-template-columns: 32px 1fr 90px 90px 180px; align-items: center; gap: var(--sp-3); padding: var(--sp-3) 0; }
+.lead-row + .lead-row { border-top: 1px solid var(--line-soft); }
+.lead-name { font-family: var(--font-sans); font-weight: 700; color: var(--ink); font-size: 14px; }
+.lead-stat { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
+.lead-stat span { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.lead-stat strong { font-family: var(--font-sans); font-size: 18px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.lead-conv { display: flex; flex-direction: column; gap: 4px; }
+.lead-conv-val { font-family: var(--font-sans); font-size: 14px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.lead-conv-bar { height: 6px; background: var(--surface-3); border-radius: var(--r-full); overflow: hidden; }
+.lead-conv-fill { height: 100%; border-radius: var(--r-full); transition: width 0.4s ease; }
+.lead-conv.good .lead-conv-val { color: var(--green-deep); }
+.lead-conv.good .lead-conv-fill { background: linear-gradient(90deg, var(--green) 0%, #34D399 100%); }
+.lead-conv.mid .lead-conv-val { color: #B86600; }
+.lead-conv.mid .lead-conv-fill { background: linear-gradient(90deg, var(--orange) 0%, #FF9444 100%); }
+.lead-conv.low .lead-conv-val { color: var(--red-deep); }
+.lead-conv.low .lead-conv-fill { background: linear-gradient(90deg, var(--red) 0%, #F87171 100%); }
+.lead-conv.muted .lead-conv-val { color: var(--muted); }
+.lead-conv.muted .lead-conv-fill { background: var(--line); }
+@media(max-width:720px) {
+  .lead-row { grid-template-columns: 28px 1fr; }
+  .lead-row .lead-stat, .lead-row .lead-conv { grid-column: 2; align-items: flex-start; }
+}
 </style>
 </head>
 <body>
@@ -2223,6 +2251,7 @@ async function renderManagerDashboard() {
     const lvlName = getLevelName(data.totalSales);
 
     el.innerHTML =
+      '<div class="overview-narrow">' +
       '<div class="page-head">' +
         '<div>' +
           '<h1 class="page-title">Привет, ' + STATE.user.name + ' 👋</h1>' +
@@ -2320,6 +2349,7 @@ async function renderManagerDashboard() {
             : '<button class="btn btn-ghost" onclick="closeMonthHandler()">🔒 Закрыть месяц</button>' +
               '<button class="btn btn-primary" onclick="openAddSaleModal()">+ Добавить сделку</button>') +
         '</div>' +
+      '</div>' +
       '</div>';
   } catch (err) {
     el.innerHTML = '<div style="padding:60px;color:var(--red)">Ошибка: ' + err.message + '</div>';
@@ -2787,15 +2817,25 @@ async function renderMarketingDashboard() {
   (mktData.leads || []).forEach(l => { leadsMap[l.manager + '_' + l.week] = l.leads; });
 
   const weekHeaders = weeks.map(w => `<th>${w.num} нед.<br><span style="font-weight:400;font-size:10px">${w.label}</span></th>`).join('');
+  const weekTotals = weeks.map(() => 0);
+  let grandTotal = 0;
   const rows = managers.map(mgr => {
-    const cells = weeks.map(w => {
+    let mgrTotal = 0;
+    const cells = weeks.map((w, i) => {
       const val = leadsMap[mgr + '_' + w.num] || '';
+      const num = Number(val) || 0;
+      mgrTotal += num;
+      weekTotals[i] += num;
       return `<td><input type="number" min="0" id="mkt-${mgr}-${w.num}" value="${val}" placeholder="0"></td>`;
     }).join('');
-    return `<tr><td style="font-weight:600;color:var(--ink)">${mgr}</td>${cells}</tr>`;
+    grandTotal += mgrTotal;
+    return `<tr><td style="font-weight:600;color:var(--ink)">${mgr}</td>${cells}<td class="mkt-total" data-mgr="${mgr}">${mgrTotal}</td></tr>`;
   }).join('');
 
+  const footerCells = weekTotals.map((t, i) => `<td class="mkt-total" data-week="${weeks[i].num}">${t}</td>`).join('');
+
   el.innerHTML = `
+    <div class="overview-narrow">
     <div class="page-head">
       <div>
         <h1 class="page-title">Лиды по менеджерам</h1>
@@ -2805,15 +2845,45 @@ async function renderMarketingDashboard() {
         <button class="btn btn-ink" onclick="saveMarketingData()">💾 Сохранить</button>
       </div>
     </div>
-    <div class="sheet" style="padding:0" style="overflow-x:auto;padding:0">
+    <div class="sheet" style="padding:0;overflow-x:auto">
       <table class="mkt-table">
-        <thead><tr><th>Менеджер</th>${weekHeaders}</tr></thead>
+        <thead><tr><th>Менеджер</th>${weekHeaders}<th>Всего</th></tr></thead>
         <tbody>${rows}</tbody>
+        <tfoot><tr><td>Итого</td>${footerCells}<td class="mkt-total mkt-grand">${grandTotal}</td></tr></tfoot>
       </table>
     </div>
     <div style="margin-top:14px;font-size:13px;color:var(--muted)">
       Введите количество лидов, переданных каждому менеджеру за каждую неделю месяца. Конверсия рассчитывается автоматически в панели администратора.
+    </div>
     </div>`;
+
+  document.querySelectorAll('.mkt-table input[type=number]').forEach(inp => {
+    inp.addEventListener('input', recalcMarketingTotals);
+  });
+}
+
+function recalcMarketingTotals() {
+  const table = document.querySelector('.mkt-table');
+  if (!table) return;
+  const weekTotals = {};
+  let grand = 0;
+  table.querySelectorAll('tbody tr').forEach(tr => {
+    let rowSum = 0;
+    tr.querySelectorAll('input[type=number]').forEach(inp => {
+      const v = Number(inp.value) || 0;
+      const wk = inp.id.split('-').pop();
+      weekTotals[wk] = (weekTotals[wk] || 0) + v;
+      rowSum += v;
+    });
+    grand += rowSum;
+    const cell = tr.querySelector('.mkt-total');
+    if (cell) cell.textContent = rowSum;
+  });
+  table.querySelectorAll('tfoot .mkt-total[data-week]').forEach(td => {
+    td.textContent = weekTotals[td.dataset.week] || 0;
+  });
+  const grandCell = table.querySelector('.mkt-grand');
+  if (grandCell) grandCell.textContent = grand;
 }
 
 async function saveMarketingData() {
@@ -2953,6 +3023,44 @@ async function renderAdminOverview() {
         sourcesHtml +
       '</div>';
 
+    // Leads & conversion panel (for both admin_full and admin_view)
+    const leadsRows = (data.managerStats || []);
+    const totalLeads  = leadsRows.reduce((s, m) => s + (m.totalLeads || 0), 0);
+    const totalClients = leadsRows.reduce((s, m) => s + (m.sales || 0), 0);
+    const overallConv  = totalLeads > 0 ? Math.round(totalClients / totalLeads * 100) : null;
+
+    const leadsBody = leadsRows.length === 0
+      ? '<div style="color:var(--muted);font-size:13px;padding:var(--sp-3) 0">Нет менеджеров</div>'
+      : leadsRows.map((m, i) => {
+          const colorCls = mgrColorClass(i);
+          const conv = m.conversion;
+          const convCls = conv == null ? 'muted' : (conv >= 50 ? 'good' : (conv >= 25 ? 'mid' : 'low'));
+          const convTxt = conv == null ? '—' : conv + '%';
+          const barWidth = conv == null ? 0 : Math.min(100, conv);
+          return (
+            '<div class="lead-row">' +
+              '<div class="mgr-avatar ' + colorCls + '" style="width:32px;height:32px;font-size:13px">' + (m.name||'?')[0] + '</div>' +
+              '<div class="lead-name">' + m.name + '</div>' +
+              '<div class="lead-stat"><span>Лидов</span><strong>' + (m.totalLeads || 0) + '</strong></div>' +
+              '<div class="lead-stat"><span>Клиентов</span><strong>' + (m.sales || 0) + '</strong></div>' +
+              '<div class="lead-conv ' + convCls + '">' +
+                '<div class="lead-conv-val">' + convTxt + '</div>' +
+                '<div class="lead-conv-bar"><div class="lead-conv-fill" style="width:' + barWidth + '%"></div></div>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join('');
+
+    const leadsPanel =
+      '<div class="panel" style="margin-top:var(--sp-4)">' +
+        '<div class="panel-title">' +
+          '<span>🎯 Лиды и конверсия</span>' +
+          '<small>' + totalClients + ' / ' + totalLeads + ' лидов' +
+            (overallConv != null ? ' · ' + overallConv + '% общая' : '') + '</small>' +
+        '</div>' +
+        leadsBody +
+      '</div>';
+
     // Trend section
     const trendPanel =
       '<div class="panel" id="trend-section">' +
@@ -2986,6 +3094,7 @@ async function renderAdminOverview() {
           trendPanel +
           sourcesPanel +
         '</div>' +
+        leadsPanel +
       '</div>';
 
     loadTrend('quarter', document.querySelector('.trend-period-btn.active'));
