@@ -41,6 +41,8 @@ chmod +x .claude/hooks/*.sh
 | Keep-awake для долгих задач     | `hooks/keep-awake.sh`                      |
 | Backup перед крупными правками  | `hooks/backup-block.sh`                    |
 | superpowers                     | плагин (см. ниже)                          |
+| UI/дизайн через frontend-designer | скилл `frontend-designer` (см. ниже)     |
+| Аудит на Opus в multi-agent     | `SKILL.md` §7 (агент-аудитор, `model: opus`) |
 
 ## superpowers
 
@@ -56,6 +58,20 @@ marketplace. В Claude Code выполни:
 глобально, не на репозиторий). Точные идентификаторы marketplace/плагина сверь
 в выводе `/plugin marketplace add ...` — если имя отличается, используй то, что
 показал Claude Code.
+
+## frontend-designer
+
+Задачи по UI и дизайну интерфейса выполняются через скилл `frontend-designer`.
+Если он ещё не подключён в проекте/плагинах — установи его (как отдельный скилл
+в `.claude/skills/frontend-designer/` или из marketplace соответствующего плагина),
+после чего оркестратор будет вызывать его для всех UI/дизайн-задач.
+
+## Аудит на Opus для multi-agent задач
+
+Когда задача решается через несколько субагентов (subagent-driven), последним
+шагом запускается отдельный агент-аудитор на модели `opus` (параметр `model`
+инструмента Agent). Он проверяет работу остальных агентов на баги, недоработки и
+расхождения с требованиями. Подробности — в `skills/workflow-orchestrator/SKILL.md` §7.
 
 ## Важно про авто-апрув (риск)
 
