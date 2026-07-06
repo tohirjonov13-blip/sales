@@ -236,10 +236,12 @@ body {
 /* ============================================
    PAGE CONTENT
    ============================================ */
-.main {
+.main-content {
   max-width: 1320px;
+  width: 100%;
   margin: 0 auto;
   padding: var(--sp-7) var(--sp-7) calc(var(--sp-8) * 2);
+  min-height: 80vh;
 }
 
 .page-head {
@@ -1656,6 +1658,7 @@ tbody tr:hover { background: var(--surface-2); }
    ============================================ */
 
 @media (max-width: 900px) {
+  .main-content { padding: var(--sp-5) var(--sp-4) var(--sp-8); }
   .page-title { font-size: 28px; }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
   .level-row, .mgr-grid, .goals-grid { grid-template-columns: 1fr; }
@@ -1671,7 +1674,6 @@ tbody tr:hover { background: var(--surface-2); }
 
 /* === Shim: legacy utility classes used by app shell, retokenized to v2 === */
 .hidden { display: none !important; }
-.main-content { min-height: 80vh; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 .loading-spinner { display: inline-block; width: 22px; height: 22px; border: 2.5px solid var(--surface-3); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; }
@@ -1913,7 +1915,7 @@ tbody tr:hover { background: var(--surface-2); }
 </div>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzvyh9JWchTfc14LaPNE7NZqFSwQxGcCrHBh1gqvddkSb2alPjqphx8BUcab-wboNuBDA/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmbaTa-mhdJ0wO-S1sC7_wlc8P3sB3fpsqbcjkovH4571l2oOzjgU5PjdH9zUv5aUhPg/exec';
 
 let STATE = {
   user: null,
@@ -2305,7 +2307,7 @@ async function renderManagerDashboard() {
               '<strong>' + data.toNextBonus + '</strong>' +
             '</div>' +
             '<div class="level-meta-item accent">' +
-              '<span>Премия уровня</span>' +
+              '<span>Премия</span>' +
               '<strong style="font-size:13px;font-variant-numeric:tabular-nums">' + fmtSum(data.premiumBonus) + '</strong>' +
             '</div>' +
           '</div>' +
@@ -2325,7 +2327,7 @@ async function renderManagerDashboard() {
               '<div class="bonus-value sum">' + fmtSum(data.bonusAmount || data.nextBonusAmount) + '</div>' +
             '</div>' +
             '<div class="bonus purple">' +
-              '<div class="bonus-label">Премия уровня</div>' +
+              '<div class="bonus-label">Премия</div>' +
               '<div class="bonus-value sum">' + fmtSum(data.premiumBonus) + '</div>' +
             '</div>' +
           '</div>' +
@@ -3176,6 +3178,7 @@ async function renderManagerGoals() {
     ]);
     const goal = goalRes.goal || { sales: 0, fullPayments: 0, revenue: 0, earnings: 0 };
     STATE.scale = scaleRes.scale || [];
+    STATE.premiumScale = scaleRes.premiumScale || [];
     STATE.dashboard = dash;
 
     const factSales    = dash.totalSales || 0;
@@ -3269,7 +3272,10 @@ function calcRecalc() {
   const commission = revenue * rate;
   const baseBonus100 = (STATE.scale || []).reduce(function(a,l){ return a || l.bonus100; }, 0);
   const bonus = Math.floor(full / 20) * baseBonus100;
-  const premium = level ? (level.premium35 || 0) : 0;
+  let premium = 0, premiumTier = null;
+  (STATE.premiumScale || []).forEach(function (p) {
+    if (sales >= p.threshold) { premium = p.amount; premiumTier = p.threshold; }
+  });
   const salary = STATE.user.salary || 0;
   const total = salary + commission + bonus + premium;
 
@@ -3278,7 +3284,7 @@ function calcRecalc() {
     '<div>Уровень<strong>' + (level ? level.min + '–' + level.max : '—') + '</strong></div>' +
     '<div>Комиссия<strong>' + fmtSum(commission) + '</strong></div>' +
     '<div>Бонус 100%<strong>' + fmtSum(bonus) + '</strong></div>' +
-    '<div>Премия<strong>' + fmtSum(premium) + '</strong></div>';
+    '<div>Премия' + (premiumTier ? ' +' + premiumTier : '') + '<strong>' + fmtSum(premium) + '</strong></div>';
 }
 
 async function saveGoalsHandler() {
@@ -3597,9 +3603,13 @@ async function renderSettings() {
   const el = document.getElementById('tab-settings');
   el.innerHTML = '<div style="padding:60px;text-align:center;color:var(--muted)"><span class="loading-spinner" style="border-color:rgba(0,122,255,.2);border-top-color:var(--blue)"></span></div>';
 
-  const [scData, cData] = await Promise.all([api('getScales'), api('getCourses')]);
-  STATE.scale   = scData.scale   || [];
-  STATE.courses = cData.courses  || [];
+  if (!STATE.settingsDirty) {
+    const [scData, cData] = await Promise.all([api('getScales'), api('getCourses')]);
+    STATE.scale        = scData.scale        || [];
+    STATE.premiumScale = scData.premiumScale || [];
+    STATE.courses      = cData.courses       || [];
+  }
+  STATE.settingsDirty = false;
 
   const inp = 'background:var(--surface-2);border:1px solid transparent;border-radius:6px;padding:6px 10px;color:var(--ink);font-family:var(--font-sans);font-size:13px;width:100%;outline:none';
 
@@ -3609,7 +3619,6 @@ async function renderSettings() {
       <td><input type="number" value="${s.max}"         id="sc-max-${i}"  style="${inp}"></td>
       <td><input type="number" step="0.001" value="${s.rate}" id="sc-rate-${i}" style="${inp}"></td>
       <td><input type="number" value="${s.bonus100||''}" id="sc-b100-${i}" style="${inp}" placeholder="—"></td>
-      <td><input type="number" value="${s.premium35||''}" id="sc-p35-${i}" style="${inp}" placeholder="—"></td>
     </tr>
   `).join('');
 
@@ -3620,11 +3629,20 @@ async function renderSettings() {
     </div>
   `).join('');
 
+  const premiumRows = (STATE.premiumScale || []).map((p, i) => `
+    <tr>
+      <td style="font-weight:700;white-space:nowrap;color:var(--ink)">+${p.threshold || '?'}</td>
+      <td><input type="number" value="${p.threshold || ''}" id="pr-th-${i}" style="${inp}"></td>
+      <td><input type="number" value="${p.amount || ''}" id="pr-am-${i}" style="${inp}" placeholder="—"></td>
+      <td style="text-align:right"><button class="btn btn-line btn-xs" onclick="removePremiumRow(${i})">Удалить</button></td>
+    </tr>
+  `).join('');
+
   el.innerHTML = `
     <div class="page-head">
       <div>
         <h1 class="page-title">Настройки</h1>
-        <div class="page-title-sub">Шкала процентов и курсы</div>
+        <div class="page-title-sub">Шкала процентов, премии и курсы</div>
       </div>
     </div>
 
@@ -3636,10 +3654,24 @@ async function renderSettings() {
         </div>
         <div style="overflow-x:auto">
           <table>
-            <thead><tr><th>MIN</th><th>MAX</th><th>%</th><th>Бонус 100%</th><th>Премия 50+</th></tr></thead>
+            <thead><tr><th>MIN</th><th>MAX</th><th>%</th><th>Бонус 100%</th></tr></thead>
             <tbody id="scale-tbody">${scaleRows}</tbody>
           </table>
         </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-header">
+          <span class="table-title">🏆 Премия за продажи</span>
+          <button class="btn btn-ink" onclick="addPremiumRow()">+ Порог</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Название</th><th>Порог (продаж)</th><th>Сумма премии</th><th></th></tr></thead>
+            <tbody id="premium-tbody">${premiumRows}</tbody>
+          </table>
+        </div>
+        <div style="padding:8px 16px;font-size:12px;color:var(--muted)">Начисляется наивысший достигнутый порог. Сохраняются кнопкой «Сохранить» в шкале процентов.</div>
       </div>
 
       <div class="sheet" style="padding:0">
@@ -3655,17 +3687,50 @@ async function renderSettings() {
   `;
 }
 
-async function saveScales() {
-  const scale = STATE.scale.map((s,i) => ({
+function collectScale() {
+  return STATE.scale.map((s,i) => ({
     min:      Number(document.getElementById(`sc-min-${i}`)?.value  || s.min),
     max:      Number(document.getElementById(`sc-max-${i}`)?.value  || s.max),
     rate:     Number(document.getElementById(`sc-rate-${i}`)?.value || s.rate),
     bonus100: Number(document.getElementById(`sc-b100-${i}`)?.value) || 0,
-    premium35:Number(document.getElementById(`sc-p35-${i}`)?.value)  || 0,
   }));
-  const res = await api('updateScales', { scale });
-  if (res.success) toast('✅ Шкала обновлена');
+}
+
+function collectPremiumScale() {
+  return (STATE.premiumScale || []).map((p, i) => ({
+    threshold: Number(document.getElementById(`pr-th-${i}`)?.value) || 0,
+    amount:    Number(document.getElementById(`pr-am-${i}`)?.value) || 0,
+  }));
+}
+
+async function saveScales() {
+  const scale = collectScale();
+  const premiumScale = collectPremiumScale().filter(p => p.threshold > 0);
+  if (!premiumScale.length) { toast('Добавьте хотя бы один порог премии', 'error'); return; }
+  const res = await api('updateScales', { scale, premiumScale });
+  if (res.success) {
+    toast('✅ Шкала обновлена');
+    STATE.settingsDirty = false;
+    await renderSettings();
+  }
   else toast(res.error||'Ошибка','error');
+}
+
+function addPremiumRow() {
+  STATE.scale = collectScale();
+  STATE.premiumScale = collectPremiumScale();
+  if (STATE.premiumScale.length >= 7) { toast('Максимум 7 порогов', 'error'); return; }
+  STATE.premiumScale.push({ threshold: 0, amount: 0 });
+  STATE.settingsDirty = true;
+  renderSettings();
+}
+
+function removePremiumRow(i) {
+  STATE.scale = collectScale();
+  STATE.premiumScale = collectPremiumScale();
+  STATE.premiumScale.splice(i, 1);
+  STATE.settingsDirty = true;
+  renderSettings();
 }
 
 function addCoursePrompt() {
